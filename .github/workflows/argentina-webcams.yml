@@ -1,25 +1,25 @@
-name: Argentina webcam pack checks
+name: Argentina CCTV validation
 on:
   push:
     branches: [research/argentina-webcams-20261015]
 permissions:
   contents: read
 jobs:
-  format:
+  verify:
+    name: Verify ${{ matrix.pack }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         include:
           - pack: varitech
-            sha: 977a0c46612ceb53444bae04f8a933ebc85ba9bf
-            test: src/data/cctvVaritech.test.mjs
+            sha: be73cfab016807bd880c6eb30561806f3eb4aeb3
           - pack: monte-hermoso
-            sha: 4a3847251a097a6af7b4611025636d7289623eed
-            test: src/data/cctvMonteHermoso.test.mjs
+            sha: b6bf62cf78efceddd968cf0d282a91a842b56b02
     env:
-      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_REQUIRE_ALLOCATION_GATE: '0'
+      WEBCAM_PACK: ${{ matrix.pack }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -30,15 +30,78 @@ jobs:
           node-version: 24.14.0
           cache: npm
       - run: npm ci
-      - run: npm run format
-      - name: Capture formatting corrections
-        run: |
-          node --input-type=module <<'NODE'
-          import { execFileSync } from 'node:child_process';
-          import fs from 'node:fs';
-          for (const path of execFileSync('git',['diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean)) {
-            console.log('FORMATTED '+JSON.stringify({path,content:fs.readFileSync(path,'utf8')}));
-          }
-          NODE
-      - run: node --test ${{ matrix.test }}
+      - run: npm run doctor -- --json
+      - run: npm run format:check
       - run: npm run check:boundaries
+      - name: Full unit suite
+        run: |
+          if npm test > unit.log 2>&1; then
+            tail -n 30 unit.log
+          else
+            tail -n 120 unit.log
+            exit 1
+          fi
+      - name: Production build
+        run: |
+          if npm run build > build.log 2>&1; then
+            tail -n 15 build.log
+          else
+            tail -n 80 build.log
+            exit 1
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          path: .webcam-qa
+          sparse-checkout: |
+            scripts/qa-argentina-webcams-prepare.mjs
+            scripts/qa-argentina-webcams-live.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Check default catalog wiring and prepare browser fixture
+        run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
+      - name: Start development server
+        env:
+          CCTV_SOURCES_FILE: /tmp/gev-webcam-sources.json
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort > dev.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -sf http://localhost:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat dev.log
+          exit 1
+      - name: Verify real feeds through proxy and browser
+        run: node .webcam-qa/scripts/qa-argentina-webcams-live.mjs
+      - name: Tracking regression gate
+        if: success() || failure()
+        run: |
+          if npm run test:track > track.log 2>&1; then
+            tail -n 45 track.log
+          else
+            tail -n 100 track.log
+            exit 1
+          fi
+      - name: CCTV regression gate
+        if: success() || failure()
+        run: |
+          if node scripts/qa-cctv-v2.mjs --url http://localhost:4173 > cctv.log 2>&1; then
+            tail -n 80 cctv.log
+          else
+            tail -n 140 cctv.log
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: webcam-${{ matrix.pack }}-evidence
+          path: |
+            qa-artifacts/
+            unit.log
+            build.log
+            track.log
+            cctv.log
+            dev.log
+          retention-days: 7
