@@ -32,7 +32,7 @@ async function nativeGet(url, origin = false) {
         else { if (a === 255) opaque++; else partial++; colors.add([...png.data.subarray(i, i + 4)].join(',')); }
       }
       item.png = { width: png.width, height: png.height, transparent, opaque, partial, colors: colors.size };
-      if (!origin) await fs.writeFile(OUT + '/' + new URL(url).pathname.replaceAll('/', '_'), buf);
+      if (!origin) { await fs.writeFile(OUT + '/' + new URL(url).pathname.replaceAll('/', '_'), buf); if (buf.length <= 100000) item.previewBase64 = buf.toString('base64'); }
     }
     return item;
   } catch(e) { return { url: safeUrl(url), foreignOrigin: origin, error: e.message, cause: e.cause?.code }; }
@@ -74,7 +74,9 @@ async function snapshot(name) {
 }
 try {
   await page.goto(BASE, {waitUntil:'domcontentloaded',timeout:45000});
-  await page.waitForFunction(() => Object.keys(window.radarState?.mapsByElementId || {}).length > 0, {timeout:30000});
+  await page.waitForFunction(() => (window.radarState?.pinLayers?.length || 0) >= 21, {timeout:45000});
+  await new Promise(r => setTimeout(r, 1500));
+  await snapshot('ready');
   await choose('#radar-selector','RMA13');
   try { await page.waitForFunction(() => window.radarState?.urls.some(u => u.includes('/RMA13/')), {timeout:60000}); } catch(e) { log('WAIT_ITUZAINGO',e.message); }
   await new Promise(r => setTimeout(r,2000));
@@ -101,6 +103,7 @@ await Promise.allSettled([...pending]);
 for(const r of report.responses.filter(r => /\/cache\/|json/.test(r.url+' '+r.headers['content-type']))) log('RESPONSE',r);
 const imageUrls = [...new Set(report.pages.flatMap(p => [...(p.state?.urls || []),...(p.images || []).map(i => i.url)]).map(u=>new URL(u,BASE).href))];
 const selected = ['RMA13','RMA5'].map(id=>imageUrls.find(u=>u.includes('/'+id+'/'))).filter(Boolean);
+if (!selected.length) selected.push(new URL('/cache/RMA1/20261015023000.png', BASE).href);
 for(const url of selected) {
   for(const origin of [false,true]) { const r=await nativeGet(url,origin); report.replay.push(r); log('ANONYMOUS_REPLAY',r); }
 }
