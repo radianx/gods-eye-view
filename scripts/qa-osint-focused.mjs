@@ -64,6 +64,7 @@ try {
       await app.dataManager.setEnabled('fire-perimeters',true,{origin:'user'});
       const layer=app.dataManager.layers.get('fire-perimeters').module;
       await layer.update();
+      v.scene.requestRender();
       return {stats:layer.getStats(),legend:layer.getRowControls().legend,rows:layer.getAnalystRecords()};
     });
     check('INFONA loads in the existing layer with partial-source warning',facts.stats.count===1 && facts.stats.error.includes('WFIGS: unavailable'));
@@ -73,8 +74,10 @@ try {
       const v=window.__godsEyeView.viewer;
       const C=v.camera.position.constructor;
       const p=v.scene.cartesianToCanvasCoordinates(C.fromDegrees(-57.63,-25.28));
+      v.scene.requestRender();
       const picked=p && v.scene.pick(p);
-      return picked?.id?.id?.startsWith('fire-perimeter:');
+      const id=typeof picked?.id==='string'?picked.id:picked?.id?.id;
+      return id?.startsWith('fire-perimeter:');
     },{timeout:60000,polling:500});
     const click=await page.evaluate(()=>{
       const v=window.__godsEyeView.viewer;
@@ -116,6 +119,16 @@ try {
   check('no uncaught application errors',errors.length===0);
 } catch(error) {
   report.failure=error.message;
+  if (page) report.scene = await page.evaluate(() => {
+    const v=window.__godsEyeView?.viewer;
+    if(!v)return {};
+    const C=v.camera.position.constructor;
+    const p=v.scene.cartesianToCanvasCoordinates(C.fromDegrees(-57.63,-25.28));
+    const pick=p && v.scene.pick(p);
+    return {camera:v.camera.positionCartographic,globe:v.scene.globe.show,screen:p,pickedId:typeof pick?.id==='string'?pick.id:pick?.id?.id,
+      sources:Array.from({length:v.dataSources.length},(_,i)=>v.dataSources.get(i)).filter(s=>s.name==='fire-perimeters').map(s=>({name:s.name,show:s.show,entities:s.entities.values.map(e=>({id:e.id,show:e.show,polygon:Boolean(e.polygon)}))})),
+      painted:[...window.__osintText]};
+  }).catch(()=>null);
   console.error(error);
   process.exitCode=1;
   if(page)await page.screenshot({path:path.join(output,'failure-'+pr+'.png')}).catch(()=>{});
