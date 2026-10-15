@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
-import puppeteer from '/tmp/sinarame-probe/node_modules/puppeteer/lib/esm/puppeteer/puppeteer.js';
+import { createRequire } from 'node:module';
+const { default: puppeteer } = await import(createRequire('/tmp/sinarame-probe/package.json').resolve('puppeteer'));
 
 const BASE = 'https://radares.hidricosargentina.gob.ar/';
 const OUT = 'research-output';
@@ -72,19 +73,26 @@ await page.evaluateOnNewDocument(() => {
     set(value) {
       leaflet = value;
       for (const name of ['imageOverlay', 'tileLayer']) {
-        const original = value?.[name];
-        if (typeof original !== 'function') continue;
-        function capture(...args) {
-          window.__radarOverlays.push({ kind: name, url: args[0], bounds: name === 'imageOverlay' ? args[1] : null, options: args[2] });
-          const layer = original.apply(this, args);
-          if (typeof layer.setUrl === 'function') {
-            const setUrl = layer.setUrl;
-            layer.setUrl = function(url) { window.__radarOverlays.push({ kind: 'setUrl', url }); return setUrl.call(this, url); };
-          }
-          return layer;
-        }
-        Object.assign(capture, original);
-        value[name] = capture;
+        let wrapped;
+        Object.defineProperty(value, name, {
+          configurable: true,
+          enumerable: true,
+          get() { return wrapped; },
+          set(original) {
+            if (typeof original !== 'function') { wrapped = original; return; }
+            function capture(...args) {
+              window.__radarOverlays.push({ kind: name, url: args[0], bounds: name === 'imageOverlay' ? args[1] : null, options: args[2] });
+              const layer = original.apply(this, args);
+              if (typeof layer.setUrl === 'function') {
+                const setUrl = layer.setUrl;
+                layer.setUrl = function(url) { window.__radarOverlays.push({ kind: 'setUrl', url }); return setUrl.call(this, url); };
+              }
+              return layer;
+            }
+            Object.assign(capture, original);
+            wrapped = capture;
+          },
+        });
       }
     },
   });
