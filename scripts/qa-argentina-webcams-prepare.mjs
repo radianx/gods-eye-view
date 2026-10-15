@@ -43,3 +43,5 @@ await fs.writeFile('/tmp/gev-webcam-sources.json',JSON.stringify([fixture,...cam
 await fs.writeFile('public/__webcam_qa.html','<!doctype html><html><body><video id="video" muted autoplay playsinline controls width="960"></video></body></html>');
 await sharp({create:{width:320,height:180,channels:3,background:{r:50,g:100,b:150}}}).jpeg().toFile('public/__webcam_qa.jpg');
 console.log('Prepared isolated CCTV catalog with '+expected+' real sources and one Austin geometry fixture.');
+
+await fs.copyFile('node_modules/hls.js/dist/hls.js','public/__webcam_hls.js');

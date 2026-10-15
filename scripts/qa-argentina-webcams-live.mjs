@@ -44,7 +44,7 @@ try{
    });
    assert.equal(proof.browserImage.width,1280);
  }else{
-   await page.addScriptTag({path:path.resolve('node_modules/hls.js/dist/hls.js')});
+   await page.addScriptTag({url:base+'/__webcam_hls.js'});
    const id=cameras[0].id;
    await page.evaluate((id)=>{
      const video=document.getElementById('video'); video.muted=true;
