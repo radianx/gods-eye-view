@@ -14,9 +14,9 @@ jobs:
       matrix:
         include:
           - pack: varitech
-            sha: be73cfab016807bd880c6eb30561806f3eb4aeb3
+            sha: 2318f5802db72c54affd2b0fa38e38e78251877f
           - pack: monte-hermoso
-            sha: b6bf62cf78efceddd968cf0d282a91a842b56b02
+            sha: c1eae49613aa60a9df51e90c20bebed495fafc29
     env:
       GEV_REQUIRE_ALLOCATION_GATE: '0'
       WEBCAM_PACK: ${{ matrix.pack }}
@@ -61,6 +61,7 @@ jobs:
       - name: Check default catalog wiring and prepare browser fixture
         run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
       - name: Start development server
+        id: server
         env:
           CCTV_SOURCES_FILE: /tmp/gev-webcam-sources.json
         run: |
@@ -76,7 +77,7 @@ jobs:
       - name: Verify real feeds through proxy and browser
         run: node .webcam-qa/scripts/qa-argentina-webcams-live.mjs
       - name: Tracking regression gate
-        if: success() || failure()
+        if: (success() || failure()) && steps.server.outcome == 'success'
         run: |
           if npm run test:track > track.log 2>&1; then
             tail -n 45 track.log
@@ -85,7 +86,7 @@ jobs:
             exit 1
           fi
       - name: CCTV regression gate
-        if: success() || failure()
+        if: (success() || failure()) && steps.server.outcome == 'success'
         run: |
           if node scripts/qa-cctv-v2.mjs --url http://localhost:4173 > cctv.log 2>&1; then
             tail -n 80 cctv.log
