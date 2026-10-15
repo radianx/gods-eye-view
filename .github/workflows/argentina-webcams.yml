@@ -1,25 +1,44 @@
-name: Argentina webcam verification
+name: Argentina webcam pack checks
 on:
   push:
     branches: [research/argentina-webcams-20261015]
 permissions:
   contents: read
 jobs:
-  probe:
+  format:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pack: varitech
+            sha: 977a0c46612ceb53444bae04f8a933ebc85ba9bf
+            test: src/data/cctvVaritech.test.mjs
+          - pack: monte-hermoso
+            sha: 4a3847251a097a6af7b4611025636d7289623eed
+            test: src/data/cctvMonteHermoso.test.mjs
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          ref: ${{ matrix.sha }}
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.14.0
           cache: npm
-      - run: node scripts/research-argentina-webcams.mjs
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: argentina-webcam-observations
-          path: qa-artifacts/webcams/
-          retention-days: 7
+      - run: npm ci
+      - run: npm run format
+      - name: Capture formatting corrections
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import fs from 'node:fs';
+          for (const path of execFileSync('git',['diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean)) {
+            console.log('FORMATTED '+JSON.stringify({path,content:fs.readFileSync(path,'utf8')}));
+          }
+          NODE
+      - run: node --test ${{ matrix.test }}
+      - run: npm run check:boundaries
