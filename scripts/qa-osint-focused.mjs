@@ -60,6 +60,11 @@ try {
       const app=window.__godsEyeView;
       for(const [id,entry] of app.dataManager.layers)if(entry.enabled)await app.dataManager.setEnabled(id,false,{origin:'user'});
       const v=app.viewer;
+      // Flat, untextured background isolates perimeter rendering from tile services.
+      v.imageryLayers.removeAll();
+      v.terrainProvider=new window.__CESIUM__.EllipsoidTerrainProvider();
+      v.scene.globe.baseColor=window.__CESIUM__.Color.DARKSLATEGRAY;
+      for(let i=0;i<v.scene.postProcessStages.length;i++)v.scene.postProcessStages.get(i).enabled=false;
       const C=v.camera.position.constructor;
       v.camera.cancelFlight();
       v.camera.setView({destination:C.fromDegrees(-57.63,-25.28,90000),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});

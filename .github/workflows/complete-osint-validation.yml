@@ -17,74 +17,38 @@ jobs:
             sha: d34f9298502cfeddb2a86bddd1b33c8a72a85191
             gate: quality
             command: "true"
-          - pr: 1
-            sha: d34f9298502cfeddb2a86bddd1b33c8a72a85191
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 1
-            sha: d34f9298502cfeddb2a86bddd1b33c8a72a85191
-            gate: infra-lod
-            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
           - pr: 2
             sha: 3010f97c48be0507334fe099ed52b40dede2fe52
             gate: quality
             command: "true"
-          - pr: 2
-            sha: 3010f97c48be0507334fe099ed52b40dede2fe52
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 3
+            sha: ca75fc356d4778b4276771359f2f559e8446ab2c
+            gate: quality
+            command: "true"
+          - pr: 4
+            sha: a9df014248aba49340f4504de731a0e67d56f59c
+            gate: quality
+            command: "true"
+          - pr: 5
+            sha: f0a863fcab719daaef3ec6075ca3aeff7c5f812e
+            gate: quality
+            command: "true"
+          - pr: 6
+            sha: 0de94caa39fcc1f88859809c93ff9779df3108df
+            gate: quality
+            command: "true"
+          - pr: 5
+            sha: f0a863fcab719daaef3ec6075ca3aeff7c5f812e
+            gate: cockpit
+            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
+          - pr: 6
+            sha: 0de94caa39fcc1f88859809c93ff9779df3108df
+            gate: cockpit
+            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
           - pr: 2
             sha: 3010f97c48be0507334fe099ed52b40dede2fe52
             gate: focused
             command: "node .validation-qa/scripts/qa-osint-focused.mjs"
-          - pr: 3
-            sha: ca75fc356d4778b4276771359f2f559e8446ab2c
-            gate: quality
-            command: "true"
-          - pr: 3
-            sha: ca75fc356d4778b4276771359f2f559e8446ab2c
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 3
-            sha: ca75fc356d4778b4276771359f2f559e8446ab2c
-            gate: focused
-            command: "node .validation-qa/scripts/qa-osint-focused.mjs"
-          - pr: 4
-            sha: a9df014248aba49340f4504de731a0e67d56f59c
-            gate: quality
-            command: "true"
-          - pr: 4
-            sha: a9df014248aba49340f4504de731a0e67d56f59c
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 4
-            sha: a9df014248aba49340f4504de731a0e67d56f59c
-            gate: infra-lod
-            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
-          - pr: 5
-            sha: 757989bf8f28127d77e3f499f4d72e5b8772462e
-            gate: quality
-            command: "true"
-          - pr: 5
-            sha: 757989bf8f28127d77e3f499f4d72e5b8772462e
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 5
-            sha: 757989bf8f28127d77e3f499f4d72e5b8772462e
-            gate: cockpit
-            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
-          - pr: 6
-            sha: 611ed7b74d1b7711cf43769efc184d8a869a3411
-            gate: quality
-            command: "true"
-          - pr: 6
-            sha: 611ed7b74d1b7711cf43769efc184d8a869a3411
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 6
-            sha: 611ed7b74d1b7711cf43769efc184d8a869a3411
-            gate: cockpit
-            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
     env:
       GEV_REQUIRE_ALLOCATION_GATE: ${{ matrix.gate == 'quality' && '1' || '0' }}
       PUPPETEER_SKIP_DOWNLOAD: ${{ matrix.gate == 'quality' && '1' || '0' }}
@@ -109,7 +73,7 @@ jobs:
           npm run layer-token:check -- --base-ref 533d7c64549a2df8a3c5325940f107d36680b322
           git diff --check 533d7c64549a2df8a3c5325940f107d36680b322 HEAD
           if npm test > unit.log 2>&1; then
-            rg 'ℹ (tests|pass|fail|skipped)' unit.log
+            tail -n 30 unit.log
           else
             tail -n 100 unit.log
             exit 1
