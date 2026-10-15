@@ -13,52 +13,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - pr: 1
-            sha: 44ddb533791739a6bdad5c91e87fc83561740483
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
           - pr: 2
             sha: 85b0368854338fbc03db00a677cdc59bb46874d6
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 3
-            sha: 68cab3ec0c677f5e0c42d59d61a202d38bf833f9
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 4
-            sha: f05686af26faed1cd230c38890cf1c2de3822b7b
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+            gate: infona-focused
+            command: "node .validation-qa/scripts/qa-osint-focused.mjs"
           - pr: 5
             sha: a645bf9c2b20baae231e4e0bf7e067966bd00019
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 6
-            sha: fd9cd45cac6ccf785175851e3dc4094c916f9564
-            gate: tracking
-            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
-          - pr: 1
-            sha: 44ddb533791739a6bdad5c91e87fc83561740483
-            gate: infra-lod
-            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
+            gate: dmh-focused
+            command: "node .validation-qa/scripts/qa-osint-focused.mjs"
           - pr: 3
             sha: 68cab3ec0c677f5e0c42d59d61a202d38bf833f9
-            gate: admin-outlines
+            gate: admin-swiftshader
             command: "node scripts/qa-admin-outlines.mjs http://localhost:4173 --no-video"
-          - pr: 4
-            sha: f05686af26faed1cd230c38890cf1c2de3822b7b
-            gate: infra-lod
-            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
-          - pr: 5
-            sha: a645bf9c2b20baae231e4e0bf7e067966bd00019
-            gate: cockpit
-            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
-          - pr: 6
-            sha: fd9cd45cac6ccf785175851e3dc4094c916f9564
-            gate: cockpit
+          - pr: 0
+            sha: f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
+            gate: baseline-admin
+            command: "node scripts/qa-admin-outlines.mjs http://localhost:4173 --no-video"
+          - pr: 0
+            sha: f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
+            gate: baseline-cockpit
             command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
     env:
       GEV_REQUIRE_ALLOCATION_GATE: '0'
+      OSINT_PR: ${{ matrix.pr }}
+      OSINT_GATE: ${{ matrix.gate }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -69,6 +47,17 @@ jobs:
           node-version: 24.14.0
           cache: npm
       - run: npm ci
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          path: .validation-qa
+          sparse-checkout: |
+            scripts/qa-osint-focused.mjs
+            scripts/prepare-osint-gate.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Prepare diagnostics
+        run: node .validation-qa/scripts/prepare-osint-gate.mjs
       - name: Start development server
         run: |
           npm run dev -- --host 127.0.0.1 --port 4173 --strictPort > dev.log 2>&1 &
@@ -87,6 +76,12 @@ jobs:
           else
             tail -n 160 gate.log
             exit 1
+          fi
+      - name: Print outline diagnostics
+        if: always()
+        run: |
+          if [ -f qa-shots/admin-outlines-result.json ]; then
+            cat qa-shots/admin-outlines-result.json
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

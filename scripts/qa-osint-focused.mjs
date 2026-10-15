@@ -1,0 +1,126 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import puppeteer from 'puppeteer';
+
+const pr = process.env.OSINT_PR;
+const base = 'http://localhost:4173';
+const output = path.resolve('qa-shots/osint-focused');
+await fs.mkdir(output, { recursive: true });
+const report = { pr, live: null, checks: [] };
+function check(name, value) {
+  report.checks.push({ name, passed: Boolean(value) });
+  console.log((value ? 'PASS ' : 'FAIL ') + name);
+  assert.ok(value, name);
+}
+if (pr === '2') {
+  const response = await fetch(base + '/api/fire-perimeters', { signal: AbortSignal.timeout(170000) });
+  const data = await response.json();
+  report.live = { status: response.status, sources: data.sources, rows: data.rows?.length, infona: data.rows?.filter(row => row.source === 'INFONA').slice(0, 2).map(({polygons, ...facts}) => facts) };
+} else {
+  const { createDmhObservationSource } = await import(pathToFileURL(path.resolve('server/providers/regional/dmh.js')));
+  report.live = await createDmhObservationSource().getObservation({latitude: -25.28, longitude: -57.63});
+}
+console.log('LIVE ' + JSON.stringify(report.live));
+const browser = await puppeteer.launch({headless: true, protocolTimeout: 180000, args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader']});
+let page;
+try {
+  page = await browser.newPage();
+  await page.setViewport({width:1440,height:900});
+  const errors=[];
+  page.on('pageerror', e=>errors.push(e.message));
+  await page.evaluateOnNewDocument(() => {
+    sessionStorage.setItem('gev:first-run-mission-session:v1','dismissed');
+    window.__osintText = new Set();
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function(text,...args) {
+      if(this.canvas.id === 'world-overlay-canvas' && window.__osintText.size < 300) window.__osintText.add(String(text));
+      return original.call(this,text,...args);
+    };
+  });
+  if(pr === '2') {
+    const {normalizeInfonaPerimeterSnapshot}=await import(pathToFileURL(path.resolve('src/layers/perimeters/records.js')));
+    const rows=normalizeInfonaPerimeterSnapshot({features:[{type:'Feature',properties:{id:'QA',objectid:1,date:Date.UTC(2026,9,14),sup_ha:7.36,dpto_desc:'CENTRAL',dist_desc:'ASUNCION QA'},geometry:{type:'Polygon',coordinates:[[[-57.73,-25.38],[-57.53,-25.38],[-57.53,-25.18],[-57.73,-25.18],[-57.73,-25.38]]]}}]});
+    await page.setRequestInterception(true);
+    page.on('request',request=>{
+      const url=new URL(request.url());
+      if(url.pathname==='/api/fire-perimeters')return request.respond({status:200,contentType:'application/json',body:JSON.stringify({rows,sources:{infona:{status:'ok'},wfigs:{status:'unavailable'}},partial:true})});
+      if(url.pathname.startsWith('/api/inciweb'))return request.respond({status:200,contentType:'application/json',body:JSON.stringify({rows:[]})});
+      return request.continue();
+    });
+  }
+  await page.goto(base+'/?welcome=0',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.__godsEyeView?.styleManager && document.getElementById('loading-screen')?.classList.contains('hidden'),{timeout:90000});
+  await page.evaluate(()=>window.__godsEyeView.styleManager.initialRestorePromise);
+  if(pr==='2') {
+    const facts=await page.evaluate(async()=>{
+      const app=window.__godsEyeView;
+      for(const [id,entry] of app.dataManager.layers)if(entry.enabled)await app.dataManager.setEnabled(id,false,{origin:'user'});
+      const v=app.viewer;
+      const C=v.camera.position.constructor;
+      v.camera.cancelFlight();
+      v.camera.setView({destination:C.fromDegrees(-57.63,-25.28,90000),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+      await app.dataManager.setEnabled('fire-perimeters',true,{origin:'user'});
+      const layer=app.dataManager.layers.get('fire-perimeters').module;
+      await layer.update();
+      return {stats:layer.getStats(),legend:layer.getRowControls().legend,rows:layer.getAnalystRecords()};
+    });
+    check('INFONA loads in the existing layer with partial-source warning',facts.stats.count===1 && facts.stats.error.includes('WFIGS: unavailable'));
+    check('estimated area has its own purple legend band',facts.legend.at(-1).color==='#b388ff' && facts.legend.at(-1).count===1 && facts.legend.slice(0,-1).every(x=>x.count===0));
+    check('analyst retains source, area and unknown containment',facts.rows[0].source==='INFONA' && facts.rows[0].hectares===7.36 && facts.rows[0].containedPct===null);
+    await page.waitForFunction(()=>{
+      const v=window.__godsEyeView.viewer;
+      const C=v.camera.position.constructor;
+      const p=v.scene.cartesianToCanvasCoordinates(C.fromDegrees(-57.63,-25.28));
+      const picked=p && v.scene.pick(p);
+      return picked?.id?.id?.startsWith('fire-perimeter:');
+    },{timeout:60000,polling:500});
+    const click=await page.evaluate(()=>{
+      const v=window.__godsEyeView.viewer;
+      const p=v.scene.cartesianToCanvasCoordinates(v.camera.position.constructor.fromDegrees(-57.63,-25.28));
+      const r=v.scene.canvas.getBoundingClientRect();
+      return{x:p.x+r.left,y:p.y+r.top};
+    });
+    await page.mouse.click(click.x,click.y);
+    await page.waitForFunction(()=>[...window.__osintText].some(text=>text.startsWith('FIRE ESTIMATE')),{timeout:20000});
+    const painted=await page.evaluate(()=>[...window.__osintText]);
+    check('real map click paints estimated-area card with attribution',painted.some(x=>x.includes('INFONA')) && painted.some(x=>x.includes('7.36')) && !painted.some(x=>/InciWeb|% contained/.test(x)));
+    report.fixture={facts,painted};
+  } else {
+    const observation={source:'DMH / DINAC',stationName:'ASUNCION QA',latitude:-25.28,longitude:-57.63,distanceM:1234,observedAt:new Date().toISOString(),temperatureC:0,humidityPct:0,windKph:0,windDirectionDeg:0};
+    const value=await page.evaluate(observation=>{
+      const c=window.__godsEyeView.styleManager.cockpitView;
+      const info={latitude:-25.28,longitude:-57.63};
+      const payload={status:'partial',articles:[],place:{label:'Asunción QA'},weather:{temperatureC:24,weatherCode:3,precipitationMm:0.1},stationObservation:observation};
+      document.body.classList.add('cockpit-mode');
+      document.getElementById('cockpit-hud').hidden=false;
+      document.getElementById('cockpit-signal-stream').hidden=false;
+      c.setSignalCollapsed(false); c.showBriefPage(2); c.renderRegionalBrief(payload,info);
+      const p=document.getElementById('cockpit-local-observation');
+      const observed={hidden:p.hidden,text:p.textContent,model:document.getElementById('cockpit-local-temperature').textContent,rect:p.getBoundingClientRect().toJSON()};
+      c.renderRegionalBrief({...payload,stationObservation:{...observation,observedAt:new Date(Date.now()-91*60000).toISOString()}},info);
+      const expired=p.hidden && p.textContent==='';
+      c.renderRegionalBrief(payload,info);
+      c.renderRegionalBriefStatus('loading',info);
+      const cleared=p.hidden && p.textContent==='';
+      c.renderRegionalBrief(payload,info);
+      return{observed,expired,cleared};
+    },observation);
+    check('DMH station appears separately from modeled temperature',!value.observed.hidden && value.observed.text.includes('DMH / DINAC') && value.observed.text.includes('ASUNCION QA') && value.observed.model==='24°C');
+    check('station time, distance and valid zero values are visible',value.observed.text.includes('UTC') && value.observed.text.includes('1.2 KM') && value.observed.text.includes('0.0°C') && value.observed.text.includes('RH 0%') && value.observed.rect.width>0 && value.observed.rect.height>0);
+    check('expired readings and subject loading clear the observation',value.expired && value.cleared);
+    report.fixture=value;
+  }
+  await page.screenshot({path:path.join(output,'pr-'+pr+'.png')});
+  check('no uncaught application errors',errors.length===0);
+} catch(error) {
+  report.failure=error.message;
+  console.error(error);
+  process.exitCode=1;
+  if(page)await page.screenshot({path:path.join(output,'failure-'+pr+'.png')}).catch(()=>{});
+} finally {
+  await browser.close();
+  await fs.writeFile(path.join(output,'pr-'+pr+'.json'),JSON.stringify(report,null,2));
+  console.log('REPORT '+JSON.stringify(report));
+}
