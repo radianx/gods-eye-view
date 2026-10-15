@@ -1,116 +1,19 @@
-name: Complete OSINT contribution gates
+name: Reconcile OSINT branches with current main
 on:
   push:
     branches: [research/complete-osint-prs-20261015]
 permissions:
   contents: read
 jobs:
-  verify:
-    name: PR ${{ matrix.pr }} · ${{ matrix.gate }}
+  inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - pr: 5
-            sha: c7dfc1985d9b3ab8c5c4ccf7c1a183531618bba5
-            gate: final-cockpit
-            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
-          - pr: 6
-            sha: 2c3f0f4f26659c233800ad156984eecd1ae60687
-            gate: final-cockpit
-            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
-          - pr: 3
-            sha: fe356a61e312a3e6d11645bfc94654a9344c5390
-            gate: outline-functional-diagnostic
-            command: "node scripts/qa-admin-outlines.mjs http://localhost:4173 --no-video"
-          - pr: 2
-            sha: 85b0368854338fbc03db00a677cdc59bb46874d6
-            gate: infona-focused
-            command: "node .validation-qa/scripts/qa-osint-focused.mjs"
-          - pr: 0
-            sha: f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
-            gate: baseline-admin-software
-            command: "node scripts/qa-admin-outlines.mjs http://localhost:4173 --no-video"
-    env:
-      GEV_REQUIRE_ALLOCATION_GATE: '0'
-      OSINT_PR: ${{ matrix.pr }}
-      OSINT_GATE: ${{ matrix.gate }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: ${{ matrix.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: 24.14.0
-          cache: npm
-      - run: npm ci
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ github.sha }}
-          path: .validation-qa
-          sparse-checkout: |
-            scripts/qa-osint-focused.mjs
-            scripts/prepare-osint-gate.mjs
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
-      - name: Check changed contribution heads
-        if: matrix.pr == 3 || matrix.pr == 5 || matrix.pr == 6
-        run: |
-          node --check scripts/qa-admin-outlines.mjs
-          node --check scripts/qa-cockpit-utility.mjs
-          npm run format:check
-          npm run check:boundaries
-          if npm test > unit.log 2>&1; then
-            tail -n 25 unit.log
-          else
-            tail -n 80 unit.log
-            exit 1
-          fi
-          if npm run build > build.log 2>&1; then
-            tail -n 10 build.log
-          else
-            tail -n 80 build.log
-            exit 1
-          fi
-      - name: Prepare diagnostics
-        run: node .validation-qa/scripts/prepare-osint-gate.mjs
-      - name: Start development server
-        run: |
-          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort > dev.log 2>&1 &
-          for attempt in $(seq 1 60); do
-            if curl -sf http://localhost:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat dev.log
-          exit 1
-      - name: Run browser gate
-        run: |
-          if ${{ matrix.command }} > gate.log 2>&1; then
-            tail -n 100 gate.log
-          else
-            tail -n 160 gate.log
-            exit 1
-          fi
-      - name: Print outline diagnostics
-        if: always()
-        run: |
-          if [ -f qa-shots/admin-outlines-result.json ]; then
-            cat qa-shots/admin-outlines-result.json
-          fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: osint-pr-${{ matrix.pr }}-${{ matrix.gate }}
-          path: |
-            qa-shots/
-            qa-artifacts/
-            gate.log
-            dev.log
-            unit.log
-            build.log
-          retention-days: 14
+      - name: Fetch current upstream
+        run: git fetch https://github.com/bilawalsidhu/gods-eye-view.git 533d7c64549a2df8a3c5325940f107d36680b322
+      - name: Inspect six merges without changing any branch
+        run: node scripts/inspect-osint-merges.mjs
