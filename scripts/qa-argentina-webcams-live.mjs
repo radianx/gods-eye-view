@@ -27,8 +27,13 @@ if(pack==='varitech'){
   assert.equal(media.headers.get('location'),'/api/cctv/frame/varitech-cam003');
 }
 const browser=await puppeteer.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
+let page;
+const diagnostics=[];
 try{
- const page=await browser.newPage();
+ page=await browser.newPage();
+ page.on('pageerror',e=>diagnostics.push({pageerror:e.message}));
+ page.on('requestfailed',r=>{if(r.url().includes('/api/cctv/'))diagnostics.push({failed:r.url(),error:r.failure()?.errorText});});
+ page.on('response',r=>{if(r.url().includes('/api/cctv/media/'))diagnostics.push({status:r.status(),url:r.url()});});
  await page.setViewport({width:1280,height:800});
  await page.goto(base+'/__webcam_qa.html',{waitUntil:'domcontentloaded'});
  if(pack==='varitech'){
@@ -45,7 +50,8 @@ try{
      const video=document.getElementById('video'); video.muted=true;
      window.hls=new Hls();
      window.lease=crypto.randomUUID();
-     window.hls.on(Hls.Events.ERROR,(_event,data)=>{if(data.fatal)window.hlsFailure=data.details;});
+     window.hlsErrors=[];
+     window.hls.on(Hls.Events.ERROR,(_event,data)=>{window.hlsErrors.push({details:data.details,fatal:data.fatal,reason:data.reason});if(data.fatal)window.hlsFailure=data.details;});
      window.hls.attachMedia(video);
      window.hls.loadSource('/api/cctv/media/'+id+'?lease='+window.lease);
      video.play().catch(()=>{});
@@ -71,6 +77,13 @@ try{
  assert.equal(proof.app.activeCameraId,id);
  assert.match(proof.app.camera.name,/\(approx\. location\)$/);
  await page.screenshot({path:'qa-artifacts/'+pack+'-app.png'});
+}catch(error){
+ proof.error=String(error);
+ proof.diagnostics=diagnostics.slice(-35);
+ if(page)proof.browserFailure=await page.evaluate(()=>{const v=document.getElementById('video');return {href:location.href,video:v?{width:v.videoWidth,height:v.videoHeight,time:v.currentTime,readyState:v.readyState,paused:v.paused,networkState:v.networkState,error:v.error?{code:v.error.code,message:v.error.message}:null}:null,hlsErrors:window.hlsErrors||[]};}).catch(e=>({error:String(e)}));
+ await fs.writeFile('qa-artifacts/'+pack+'-failure.json',JSON.stringify(proof,null,2));
+ console.log('LIVE_FAILURE '+JSON.stringify(proof));
+ throw error;
 }finally{await browser.close();}
 await fs.writeFile('qa-artifacts/'+pack+'-proof.json',JSON.stringify(proof,null,2));
 console.log('LIVE_PROOF '+JSON.stringify(proof));

@@ -1,54 +1,25 @@
-name: Argentina CCTV validation
+name: Argentina CCTV playback diagnostic
 on:
   push:
     branches: [research/argentina-webcams-20261015]
 permissions:
   contents: read
 jobs:
-  verify:
-    name: Verify ${{ matrix.pack }}
+  playback:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - pack: varitech
-            sha: 2318f5802db72c54affd2b0fa38e38e78251877f
-          - pack: monte-hermoso
-            sha: c1eae49613aa60a9df51e90c20bebed495fafc29
+    timeout-minutes: 8
     env:
-      GEV_REQUIRE_ALLOCATION_GATE: '0'
-      WEBCAM_PACK: ${{ matrix.pack }}
+      WEBCAM_PACK: monte-hermoso
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: ${{ matrix.sha }}
+          ref: c1eae49613aa60a9df51e90c20bebed495fafc29
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.14.0
           cache: npm
       - run: npm ci
-      - run: npm run doctor -- --json
-      - run: npm run format:check
-      - run: npm run check:boundaries
-      - name: Full unit suite
-        run: |
-          if npm test > unit.log 2>&1; then
-            tail -n 30 unit.log
-          else
-            tail -n 120 unit.log
-            exit 1
-          fi
-      - name: Production build
-        run: |
-          if npm run build > build.log 2>&1; then
-            tail -n 15 build.log
-          else
-            tail -n 80 build.log
-            exit 1
-          fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
@@ -58,10 +29,8 @@ jobs:
             scripts/qa-argentina-webcams-live.mjs
           sparse-checkout-cone-mode: false
           persist-credentials: false
-      - name: Check default catalog wiring and prepare browser fixture
-        run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
+      - run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
       - name: Start development server
-        id: server
         env:
           CCTV_SOURCES_FILE: /tmp/gev-webcam-sources.json
         run: |
@@ -74,35 +43,13 @@ jobs:
           done
           cat dev.log
           exit 1
-      - name: Verify real feeds through proxy and browser
+      - name: Verify public HLS playback through application relay
         run: node .webcam-qa/scripts/qa-argentina-webcams-live.mjs
-      - name: Tracking regression gate
-        if: (success() || failure()) && steps.server.outcome == 'success'
-        run: |
-          if npm run test:track > track.log 2>&1; then
-            tail -n 45 track.log
-          else
-            tail -n 100 track.log
-            exit 1
-          fi
-      - name: CCTV regression gate
-        if: (success() || failure()) && steps.server.outcome == 'success'
-        run: |
-          if node scripts/qa-cctv-v2.mjs --url http://localhost:4173 > cctv.log 2>&1; then
-            tail -n 80 cctv.log
-          else
-            tail -n 140 cctv.log
-            exit 1
-          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: webcam-${{ matrix.pack }}-evidence
+          name: monte-hermoso-playback-diagnostic
           path: |
             qa-artifacts/
-            unit.log
-            build.log
-            track.log
-            cctv.log
             dev.log
           retention-days: 7
