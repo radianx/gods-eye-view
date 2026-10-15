@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 24.14.0
       - name: Install isolated browser probe
-        run: npm install --prefix /tmp/sinarame-probe --no-audit --no-fund puppeteer@25.10.0
+        run: npm install --prefix /tmp/sinarame-probe --no-audit --no-fund puppeteer@25.10.0 pngjs@7.0.0
       - name: Inspect public viewer and anonymous image access
         run: node scripts/research-sinarame.mjs
       - name: Keep research evidence
