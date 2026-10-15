@@ -1,0 +1,100 @@
+name: Complete OSINT contribution gates
+on:
+  push:
+    branches: [research/complete-osint-prs-20261015]
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: PR ${{ matrix.pr }} · ${{ matrix.gate }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pr: 1
+            sha: 44ddb533791739a6bdad5c91e87fc83561740483
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 2
+            sha: 85b0368854338fbc03db00a677cdc59bb46874d6
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 3
+            sha: 68cab3ec0c677f5e0c42d59d61a202d38bf833f9
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 4
+            sha: f05686af26faed1cd230c38890cf1c2de3822b7b
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 5
+            sha: a645bf9c2b20baae231e4e0bf7e067966bd00019
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 6
+            sha: fd9cd45cac6ccf785175851e3dc4094c916f9564
+            gate: tracking
+            command: "npm run test:track -- --url http://localhost:4173 --offline-imagery"
+          - pr: 1
+            sha: 44ddb533791739a6bdad5c91e87fc83561740483
+            gate: infra-lod
+            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
+          - pr: 3
+            sha: 68cab3ec0c677f5e0c42d59d61a202d38bf833f9
+            gate: admin-outlines
+            command: "node scripts/qa-admin-outlines.mjs http://localhost:4173 --no-video"
+          - pr: 4
+            sha: f05686af26faed1cd230c38890cf1c2de3822b7b
+            gate: infra-lod
+            command: "node scripts/qa-infra-lod.mjs --url http://localhost:4173"
+          - pr: 5
+            sha: a645bf9c2b20baae231e4e0bf7e067966bd00019
+            gate: cockpit
+            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
+          - pr: 6
+            sha: fd9cd45cac6ccf785175851e3dc4094c916f9564
+            gate: cockpit
+            command: "QA_BASE_URL=http://localhost:4173 node scripts/qa-cockpit-utility.mjs"
+    env:
+      GEV_REQUIRE_ALLOCATION_GATE: '0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ matrix.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - run: npm ci
+      - name: Start development server
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort > dev.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -sf http://localhost:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat dev.log
+          exit 1
+      - name: Run browser gate
+        run: |
+          if ${{ matrix.command }} > gate.log 2>&1; then
+            tail -n 100 gate.log
+          else
+            tail -n 160 gate.log
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: osint-pr-${{ matrix.pr }}-${{ matrix.gate }}
+          path: |
+            qa-shots/
+            qa-artifacts/
+            gate.log
+            dev.log
+          retention-days: 14
