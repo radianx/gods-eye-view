@@ -1,0 +1,525 @@
+{
+  "checked_at": "2026-10-15T05:51:04.574Z",
+  "source": "https://radares.hidricosargentina.gob.ar/",
+  "evidence_run": "https://github.com/radianx/gods-eye-view/actions/runs/38688995998",
+  "scope": "Public viewer observation; coordinates and bounds are supplied/calculated by the viewer, not independently verified.",
+  "catalog": [
+    {
+      "name": "Córdoba (RMA1)",
+      "latitude": -31.441278,
+      "longitude": -64.19202
+    },
+    {
+      "name": "Ezeiza (RMA2)",
+      "latitude": -34.800817,
+      "longitude": -58.515568
+    },
+    {
+      "name": "Las Lomitas (RMA3)",
+      "latitude": -24.7303,
+      "longitude": -60.5514
+    },
+    {
+      "name": "Resistencia (RMA4)",
+      "latitude": -27.451759,
+      "longitude": -59.051047
+    },
+    {
+      "name": "Bernardo de Irigoyen (RMA5)",
+      "latitude": -26.2781,
+      "longitude": -53.6708
+    },
+    {
+      "name": "Mar del Plata (RMA6)",
+      "latitude": -37.9131,
+      "longitude": -57.5278
+    },
+    {
+      "name": "Neuquén (RMA7)",
+      "latitude": -38.8766,
+      "longitude": -68.1449
+    },
+    {
+      "name": "Mercedes (RMA8)",
+      "latitude": -29.1959,
+      "longitude": -58.0448
+    },
+    {
+      "name": "Río Grande (RMA9)",
+      "latitude": -53.784,
+      "longitude": -67.7443
+    },
+    {
+      "name": "Bahía Blanca (RMA10)",
+      "latitude": -38.7343,
+      "longitude": -62.1634
+    },
+    {
+      "name": "Termas de Río Hondo (RMA11)",
+      "latitude": -27.5026,
+      "longitude": -64.9058
+    },
+    {
+      "name": "Las Grutas (RMA12)",
+      "latitude": -40.772222,
+      "longitude": -65.076111
+    },
+    {
+      "name": "Ituzaingó (RMA13)",
+      "latitude": -27.6224,
+      "longitude": -56.8417
+    },
+    {
+      "name": "Bolívar (RMA14)",
+      "latitude": -36.189205,
+      "longitude": -61.070219
+    },
+    {
+      "name": "Patquía (RMA15)",
+      "latitude": -30.0308,
+      "longitude": -66.8761
+    },
+    {
+      "name": "Villa Reynols (RMA16)",
+      "latitude": -33.7183,
+      "longitude": -65.3755
+    },
+    {
+      "name": "Alejandro Roca (RMA17)",
+      "latitude": -33.351361,
+      "longitude": -63.703805
+    },
+    {
+      "name": "Santa Isabel (RMA18)",
+      "latitude": -36.223472,
+      "longitude": -66.9362805
+    },
+    {
+      "name": "Santa Rosa (RMA19)",
+      "latitude": -33.259194,
+      "longitude": -66.09392
+    },
+    {
+      "name": "Las Lajitas (RMA20)",
+      "latitude": -24.7448916,
+      "longitude": -64.25115
+    },
+    {
+      "name": "Tostado (RMA21)",
+      "latitude": -29.2194138,
+      "longitude": -61.7411361
+    }
+  ],
+  "individual": [
+    {
+      "name": "ituzaingo-history",
+      "frame_urls": [
+        "/cache/RMA13/20261015014000.png",
+        "/cache/RMA13/20261015015000.png",
+        "/cache/RMA13/20261015020000.png",
+        "/cache/RMA13/20261015021000.png",
+        "/cache/RMA13/20261015022000.png",
+        "/cache/RMA13/20261015023000.png"
+      ],
+      "frame_labels": [
+        "15/10/2026 01:40:00",
+        "15/10/2026 01:50:00",
+        "15/10/2026 02:00:00",
+        "15/10/2026 02:10:00",
+        "15/10/2026 02:20:00",
+        "15/10/2026 02:30:00"
+      ],
+      "bounds": {
+        "_southWest": {
+          "lat": -29.792892159097075,
+          "lng": -59.274987079939535
+        },
+        "_northEast": {
+          "lat": -25.451907840902923,
+          "lng": -54.40841292006047
+        }
+      }
+    },
+    {
+      "name": "bernardo-history",
+      "frame_urls": [
+        "/cache/RMA5/20261015014000.png",
+        "/cache/RMA5/20261015015000.png",
+        "/cache/RMA5/20261015020000.png",
+        "/cache/RMA5/20261015021000.png",
+        "/cache/RMA5/20261015022000.png",
+        "/cache/RMA5/20261015023000.png"
+      ],
+      "frame_labels": [
+        "15/10/2026 01:40:00",
+        "15/10/2026 01:50:00",
+        "15/10/2026 02:00:00",
+        "15/10/2026 02:10:00",
+        "15/10/2026 02:20:00",
+        "15/10/2026 02:30:00"
+      ],
+      "bounds": {
+        "_southWest": {
+          "lat": -28.448592159097075,
+          "lng": -56.075231015147395
+        },
+        "_northEast": {
+          "lat": -24.107607840902922,
+          "lng": -51.266368984852605
+        }
+      }
+    }
+  ],
+  "mosaic": [
+    {
+      "url": "/cache/RMA1/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -33.61177015909708,
+          "lng": -66.71898839577838
+        },
+        "_northEast": {
+          "lat": -29.270785840902924,
+          "lng": -61.66505160422161
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA2/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -36.971309159097075,
+          "lng": -61.14111785493281
+        },
+        "_northEast": {
+          "lat": -32.63032484090293,
+          "lng": -55.890018145067195
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA3/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -26.900792159097076,
+          "lng": -62.925040334935396
+        },
+        "_northEast": {
+          "lat": -22.559807840902923,
+          "lng": -58.177759665064606
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA4/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -29.622251159097075,
+          "lng": -61.48055853237313
+        },
+        "_northEast": {
+          "lat": -25.281266840902923,
+          "lng": -56.62153546762686
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA5/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -28.448592159097075,
+          "lng": -56.075231015147395
+        },
+        "_northEast": {
+          "lat": -24.107607840902922,
+          "lng": -51.266368984852605
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA6/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -40.08359215909707,
+          "lng": -60.2605007639933
+        },
+        "_northEast": {
+          "lat": -35.74260784090293,
+          "lng": -54.7950992360067
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA7/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -41.047092159097076,
+          "lng": -70.91426168440613
+        },
+        "_northEast": {
+          "lat": -36.70610784090293,
+          "lng": -65.37553831559389
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA8/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -31.366392159097078,
+          "lng": -60.51450567357909
+        },
+        "_northEast": {
+          "lat": -27.025407840902925,
+          "lng": -55.57509432642092
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA9/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -55.95449215909707,
+          "lng": -71.39330767722156
+        },
+        "_northEast": {
+          "lat": -51.613507840902926,
+          "lng": -64.09529232277843
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA10/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -40.90479215909707,
+          "lng": -64.92723607122994
+        },
+        "_northEast": {
+          "lat": -36.563807840902925,
+          "lng": -59.39956392877006
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA11/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -29.673092159097077,
+          "lng": -67.33643294357965
+        },
+        "_northEast": {
+          "lat": -25.332107840902925,
+          "lng": -62.47516705642035
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA12/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -42.94271415909707,
+          "lng": -67.9229528740324
+        },
+        "_northEast": {
+          "lat": -38.60172984090293,
+          "lng": -62.22926912596759
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA13/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -29.792892159097075,
+          "lng": -59.274987079939535
+        },
+        "_northEast": {
+          "lat": -25.451907840902923,
+          "lng": -54.40841292006047
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA14/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -38.359697159097074,
+          "lng": -63.741539478342624
+        },
+        "_northEast": {
+          "lat": -34.01871284090293,
+          "lng": -58.39889852165738
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA15/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -32.20129215909707,
+          "lng": -69.36634618937171
+        },
+        "_northEast": {
+          "lat": -27.860307840902923,
+          "lng": -64.38585381062828
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA16/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -35.88879215909707,
+          "lng": -67.96747738076252
+        },
+        "_northEast": {
+          "lat": -31.547807840902923,
+          "lng": -62.78352261923749
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA17/20261015023000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -35.52185315909707,
+          "lng": -66.28480396679717
+        },
+        "_northEast": {
+          "lat": -31.18086884090292,
+          "lng": -61.122806033202835
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA18/20261015001000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -38.393964159097074,
+          "lng": -69.60877080302657
+        },
+        "_northEast": {
+          "lat": -34.05297984090293,
+          "lng": -64.26379019697342
+        }
+      }
+    },
+    {
+      "url": "/cache/RMA20/20261015024000.png",
+      "bounds": {
+        "_southWest": {
+          "lat": -26.915383759097075,
+          "lng": -66.62506887021608
+        },
+        "_northEast": {
+          "lat": -22.574399440902923,
+          "lng": -61.8772311297839
+        }
+      }
+    }
+  ],
+  "anonymous_http_checks": [
+    {
+      "url": "https://radares.hidricosargentina.gob.ar/cache/RMA13/20261015023000.png",
+      "foreignOrigin": false,
+      "status": 200,
+      "headers": {
+        "content-length": "10178",
+        "content-type": "image/png",
+        "date": "Thu, 15 Oct 2026 05:51:59 GMT",
+        "etag": "\"k+1oSchLX3cOp72QpMBuLWNye77dMs1zauZCuGXpWNM=\"",
+        "last-modified": "Thu, 15 Oct 2026 05:39:19 GMT"
+      },
+      "bytes": 10178,
+      "png": {
+        "width": 512,
+        "height": 512,
+        "transparent": 254777,
+        "opaque": 7367,
+        "partial": 0,
+        "colors": 36
+      }
+    },
+    {
+      "url": "https://radares.hidricosargentina.gob.ar/cache/RMA13/20261015023000.png",
+      "foreignOrigin": true,
+      "status": 200,
+      "headers": {
+        "content-length": "10178",
+        "content-type": "image/png",
+        "date": "Thu, 15 Oct 2026 05:51:59 GMT",
+        "etag": "\"k+1oSchLX3cOp72QpMBuLWNye77dMs1zauZCuGXpWNM=\"",
+        "last-modified": "Thu, 15 Oct 2026 05:39:19 GMT"
+      },
+      "bytes": 10178,
+      "png": {
+        "width": 512,
+        "height": 512,
+        "transparent": 254777,
+        "opaque": 7367,
+        "partial": 0,
+        "colors": 36
+      }
+    },
+    {
+      "url": "https://radares.hidricosargentina.gob.ar/cache/RMA5/20261015014000.png",
+      "foreignOrigin": false,
+      "status": 200,
+      "headers": {
+        "content-length": "21530",
+        "content-type": "image/png",
+        "date": "Thu, 15 Oct 2026 05:52:00 GMT",
+        "etag": "\"2FPwcNkW7mLBScNDFk7vbGF8gXTDYJvJ/mZApdY84Ow=\"",
+        "last-modified": "Thu, 15 Oct 2026 04:49:19 GMT"
+      },
+      "bytes": 21530,
+      "png": {
+        "width": 512,
+        "height": 512,
+        "transparent": 231048,
+        "opaque": 31096,
+        "partial": 0,
+        "colors": 73
+      }
+    },
+    {
+      "url": "https://radares.hidricosargentina.gob.ar/cache/RMA5/20261015014000.png",
+      "foreignOrigin": true,
+      "status": 200,
+      "headers": {
+        "content-length": "21530",
+        "content-type": "image/png",
+        "date": "Thu, 15 Oct 2026 05:52:00 GMT",
+        "etag": "\"2FPwcNkW7mLBScNDFk7vbGF8gXTDYJvJ/mZApdY84Ow=\"",
+        "last-modified": "Thu, 15 Oct 2026 04:49:19 GMT"
+      },
+      "bytes": 21530,
+      "png": {
+        "width": 512,
+        "height": 512,
+        "transparent": 231048,
+        "opaque": 31096,
+        "partial": 0,
+        "colors": 73
+      }
+    }
+  ],
+  "browser_cors": {
+    "url": "https://radares.hidricosargentina.gob.ar/cache/RMA13/20261015023000.png",
+    "origin": "http://127.0.0.1:37853",
+    "fetch": {
+      "error": "Failed to fetch"
+    },
+    "imagePlain": {
+      "loaded": true,
+      "width": 512,
+      "height": 512,
+      "canvasReadable": false
+    },
+    "imageAnonymousCors": {
+      "loaded": false
+    }
+  },
+  "timestamp_timezone": "Not explicitly declared in observed labels. Do not convert to UTC without confirmation."
+}
