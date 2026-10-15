@@ -18,7 +18,7 @@ if (pr === '2') {
   const response = await fetch(base + '/api/fire-perimeters', { signal: AbortSignal.timeout(170000) });
   const data = await response.json();
   report.live = { status: response.status, sources: data.sources, rows: data.rows?.length, infona: data.rows?.filter(row => row.source === 'INFONA').slice(0, 2).map(({polygons, ...facts}) => facts) };
-} else {
+} else if (pr === '5') {
   const { createDmhObservationSource } = await import(pathToFileURL(path.resolve('server/providers/regional/dmh.js')));
   report.live = await createDmhObservationSource().getObservation({latitude: -25.28, longitude: -57.63});
 }
@@ -29,6 +29,8 @@ try {
   page = await browser.newPage();
   await page.setViewport({width:1440,height:900});
   const errors=[];
+  const packRequests=[];
+  page.on('request', r=>{ if(r.url().includes('/argentina_admin/departments.json'))packRequests.push(r.url()); });
   page.on('pageerror', e=>errors.push(e.message));
   await page.evaluateOnNewDocument(() => {
     sessionStorage.setItem('gev:first-run-mission-session:v1','dismissed');
@@ -74,7 +76,8 @@ try {
       const v=window.__godsEyeView.viewer;
       const C=v.camera.position.constructor;
       const p=v.scene.cartesianToCanvasCoordinates(C.fromDegrees(-57.63,-25.28));
-      v.scene.requestRender();
+      window.__godsEyeView.requestRender('osint-browser-proof');
+      v.render();
       const picked=p && v.scene.pick(p);
       const id=typeof picked?.id==='string'?picked.id:picked?.id?.id;
       return id?.startsWith('fire-perimeter:');
@@ -90,6 +93,46 @@ try {
     const painted=await page.evaluate(()=>[...window.__osintText]);
     check('real map click paints estimated-area card with attribution',painted.some(x=>x.includes('INFONA')) && painted.some(x=>x.includes('7.36')) && !painted.some(x=>/InciWeb|% contained/.test(x)));
     report.fixture={facts,painted};
+  } else if (pr === '3') {
+    await page.evaluate(async()=>{
+      const app=window.__godsEyeView;
+      for(const [id,entry] of app.dataManager.layers)if(entry.enabled)await app.dataManager.setEnabled(id,false,{origin:'user'});
+    });
+    report.outlines=[];
+    for(const [target,lat,lon,height] of [
+      ['Departamento Capital, Misiones',-27.4,-55.9,80000],
+      ['Partido de La Matanza, Buenos Aires',-34.8,-58.6,90000],
+      ['Comuna 1, CABA',-34.6,-58.37,14000],
+    ]){
+      const result=await page.evaluate(async({target,lat,lon,height})=>{
+        const app=window.__godsEyeView,v=app.viewer;
+        app.annotations.clear();
+        v.camera.cancelFlight();
+        v.camera.setView({destination:v.camera.position.constructor.fromDegrees(lon,lat,height),orientation:{heading:0,pitch:-Math.PI/2,roll:0}});
+        const start=performance.now();
+        const response=await app.annotations.annotate([{type:'area',target,label:target,footprint:true}],{flyTo:false});
+        app.requestRender('osint-outline-proof');
+        return {response:response.results?.[0],resolvedMs:performance.now()-start,mark:app.annotations.list().map(({id,label,pendingOutline})=>({id,label,pendingOutline}))};
+      },{target,lat,lon,height});
+      check(target+' resolves to a bundled area',result.response?.ok && result.response?.outline && result.response?.resolvedVia==='bundled');
+      await page.waitForFunction(()=>{
+        const app=window.__godsEyeView,v=app.viewer;
+        app.requestRender('osint-outline-proof');
+        v.render();
+        return v.dataSourceDisplay.ready && v.scene.groundPrimitives.length>0;
+      },{timeout:90000,polling:500});
+      const rendered=await page.evaluate(()=>{
+        const v=window.__godsEyeView.viewer;
+        for(let i=0;i<v.dataSources.length;i++){
+          const s=v.dataSources.get(i);
+          if(s.name==='gev-annotations')return {entities:s.entities.values.length,polygons:s.entities.values.filter(e=>e.polygon).length,ready:v.dataSourceDisplay.ready,primitives:v.scene.groundPrimitives.length};
+        }
+      });
+      check(target+' produces ready outline geometry',rendered?.polygons>0 && rendered.ready);
+      await page.screenshot({path:path.join(output,'argentina-'+report.outlines.length+'.png')});
+      report.outlines.push({target,...result,rendered});
+    }
+    check('Argentina pack is fetched once lazily',packRequests.length===1);
   } else {
     const observation={source:'DMH / DINAC',stationName:'ASUNCION QA',latitude:-25.28,longitude:-57.63,distanceM:1234,observedAt:new Date().toISOString(),temperatureC:0,humidityPct:0,windKph:0,windDirectionDeg:0};
     const value=await page.evaluate(observation=>{
@@ -127,9 +170,10 @@ try {
     const pick=p && v.scene.pick(p);
     return {camera:v.camera.positionCartographic,globe:v.scene.globe.show,screen:p,pickedId:typeof pick?.id==='string'?pick.id:pick?.id?.id,
       sources:Array.from({length:v.dataSources.length},(_,i)=>v.dataSources.get(i)).filter(s=>s.name==='fire-perimeters').map(s=>({name:s.name,show:s.show,entities:s.entities.values.map(e=>({id:e.id,show:e.show,polygon:Boolean(e.polygon)}))})),
-      painted:[...window.__osintText]};
+      dataSourceReady:v.dataSourceDisplay.ready,groundPrimitives:v.scene.groundPrimitives.length,painted:[...window.__osintText]};
   }).catch(()=>null);
   console.error(error);
+  if(page)console.log('SCREENSHOT_BASE64='+await page.screenshot({type:'jpeg',quality:35,encoding:'base64',clip:{x:400,y:180,width:640,height:480}}).catch(()=>''));
   process.exitCode=1;
   if(page)await page.screenshot({path:path.join(output,'failure-'+pr+'.png')}).catch(()=>{});
 } finally {
