@@ -15,5 +15,5 @@ jobs:
           persist-credentials: false
       - name: Fetch current upstream
         run: git fetch https://github.com/bilawalsidhu/gods-eye-view.git 533d7c64549a2df8a3c5325940f107d36680b322
-      - name: Inspect six merges without changing any branch
+      - name: Resolve reviewed conflicts in temporary checkout
         run: node scripts/inspect-osint-merges.mjs
