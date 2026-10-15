@@ -1,19 +1,29 @@
-name: Argentina CCTV playback diagnostic
+name: Argentina CCTV upstream baseline
 on:
   push:
     branches: [research/argentina-webcams-20261015]
 permissions:
   contents: read
 jobs:
-  playback:
+  verify:
+    name: Main with ${{ matrix.pack }} fixture
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pack: varitech
+            sha: 2318f5802db72c54affd2b0fa38e38e78251877f
+          - pack: monte-hermoso
+            sha: c1eae49613aa60a9df51e90c20bebed495fafc29
     env:
-      WEBCAM_PACK: monte-hermoso
+      GEV_REQUIRE_ALLOCATION_GATE: '0'
+      WEBCAM_PACK: ${{ matrix.pack }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: c1eae49613aa60a9df51e90c20bebed495fafc29
+          ref: ${{ matrix.sha }}
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
@@ -29,8 +39,15 @@ jobs:
             scripts/qa-argentina-webcams-live.mjs
           sparse-checkout-cone-mode: false
           persist-credentials: false
-      - run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
+      - name: Check default catalog wiring and prepare browser fixture
+        run: node .webcam-qa/scripts/qa-argentina-webcams-prepare.mjs
+      - name: Switch production code to unchanged upstream main
+        run: |
+          git fetch --no-tags --depth=1 origin f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
+          git checkout --detach f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
+          test "$(git rev-parse HEAD)" = f0a1b22dc82c6c5cd9690d07c1cdb297818da86f
       - name: Start development server
+        id: server
         env:
           CCTV_SOURCES_FILE: /tmp/gev-webcam-sources.json
         run: |
@@ -43,13 +60,22 @@ jobs:
           done
           cat dev.log
           exit 1
-      - name: Verify public HLS playback through application relay
-        run: node .webcam-qa/scripts/qa-argentina-webcams-live.mjs
+      - name: CCTV regression gate
+        if: (success() || failure()) && steps.server.outcome == 'success'
+        run: |
+          if node scripts/qa-cctv-v2.mjs --url http://localhost:4173 > cctv.log 2>&1; then
+            tail -n 80 cctv.log
+          else
+            tail -n 140 cctv.log
+            exit 1
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: monte-hermoso-playback-diagnostic
+          name: main-${{ matrix.pack }}-cctv-baseline
           path: |
+            qa-shots/
             qa-artifacts/
+            cctv.log
             dev.log
           retention-days: 7
