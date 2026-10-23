@@ -55,7 +55,8 @@ queries retry them and the renderer retries on the next off/on toggle. Main-file
 failures and aborts still reject the load.
 PR #1009 uses the same URL-list contract for NVE: when combining them, append
 both regional URLs to the one supplement list and retain the shared loader.
-No NVE data or implementation is included here.
+This combined candidate retains the original NVE snapshot and implementation
+from #1009. The original PR branches remain independent.
 
 PR #1152 adds two OSM geometries. Rebuild this audit after that data change and
 update the displayed combined counts. IGN analyst-count tests derive totals from

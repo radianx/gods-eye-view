@@ -58,7 +58,9 @@ factory and supplies its existing functions. Other consumers should use the pack
 exports, which do not import standalone application globals.
 
 Dataset files and source/license notices remain under `src/data/local_data/`.
-Their input counts are 4,351 datacenter features and 825 dam features
-(704 OSM/OpenInfraMap plus 121 IGN Argentina points). Cesium may
+Their input counts are 4,351 datacenter features and 4,968 dam features
+(706 OSM/OpenInfraMap, 4,141 NVE Norway and 121 IGN Argentina). The analyst
+source returns 4,967 records; OSM relation 19953989 is an unsupported
+MultiLineString. Cesium may
 expand multipart geometries into multiple entities; entity and stem counts are
 different measurements. The IGN supplement retains its own reuse terms; the original datasets are not relicensed.

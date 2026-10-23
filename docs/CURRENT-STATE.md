@@ -1,14 +1,16 @@
 # God's Eye View Current State
 
-Dams retains layer ID `local-dams` and loads the original 704 OSM/OpenInfraMap
-features plus 121 IGN Argentina Dique points (825 input features). The separate
-IGN pack is loaded lazily with the existing dataset by both the renderer and
-`find_infrastructure`. A failed IGN supplement leaves OSM visible with a source
+Dams retains layer ID `local-dams` and loads 706 OSM/OpenInfraMap features,
+4,141 NVE Norway points and 121 IGN Argentina Dique points (4,968 input
+features; 4,967 analyst records). The separate
+NVE and IGN packs are loaded lazily with the existing dataset by both the renderer and
+`find_infrastructure`. A failed supplement leaves OSM and every healthy sibling visible with a source
 error; partial loads are not cached and retry on the next query or layer toggle.
 Main-file failures and aborts still fail the load. Repeated URLs are loaded once;
 regional features are appended, never keyed or collapsed by their display name.
-The provenance mapper also recognizes the independent NVE format used by #1009
-without bundling that contribution here. The two overlapping OSM/IGN
+NVE rows retain their full stable IDs and NLOD credit alongside the NVE card
+facts and voice query fields. The existing OSM MultiLineString (relation
+19953989) accounts for the one-record analyst gap. The two overlapping OSM/IGN
 records are excluded during the reproducible offline build
 (`scripts/build-argentina-dams.mjs`), with a checked-in audit trail. The source-typed
 Río Salado flood-defense embankment and Bañado de la Estrella wetland are also
@@ -18,8 +20,8 @@ the audit. Dam query rows carry source IDs and dates; the result attribution
 includes only sources represented in the returned rows, after the limit. IGN
 records retain compilation metadata, stable IDs and per-feature source attribution;
 retrieved 2026-10-15, underlying source update date unspecified. These are static
-structure locations. Existing toggles, layer tokens, LOD and card layout remain
-the same. Provenance and terms: `local_data/argentina_dams/README.md`.
+structure locations. Existing toggles, layer tokens, LOD and independent source attribution remain intact. NVE cards retain
+the translated purpose, type, construction year, power plant and municipality. Provenance and terms: `local_data/argentina_dams/README.md`.
 
 Analyst region queries resolve unique Natural Earth names offline without
 geocoding, so Gold Coast and Ivory Coast name the West African natural regions.
@@ -3649,7 +3651,7 @@ its criteria cannot be silently ignored.
 | Bikeshare 🚲           | GBFS (Lyft + BCycle + Social Bicycles + PBSC incl. Bike Share Toronto, Bike Itaú (Brazil), Bicing (Barcelona) and seven other Spanish cities + Urban Sharing, Entur, JCDecaux (Lillestrøm, Valencia, Seville) + nextbike (AMBici))                                                                                                                                        | `src/data/bikeshare.js`                               | `/api/gbfs`                                              | 60s                                                                               |
 | Directions 🧭          | OSRM on FOSSGIS servers (OpenStreetMap)                                                                                                                                                         | `src/data/directions.js`                              | `/api/route` (`steps=1`)                                 | on placement / mode change                                                        |
 | Datacenters ▣          | OSM extract (bundled)                                                                                                                                                                           | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
-| Dams ▰                 | OpenInfraMap/OSM extract (bundled)                                                                                                                                                              | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
+| Dams ▰                 | OSM (706), NVE Norway (4,141) and IGN Argentina (121); 4,968 bundled features                                                                                                                                                              | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
 | Submarine Cables ◠     | TeleGeography public map (bundled)                                                                                                                                                              | `src/data/telegeographySubmarineCables.js`            | —                                                        | static                                                                            |
 | FIRMS Active Fires ▲   | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h)                                                                                                                                        | `src/data/firmsHeatmap.js`                            | `/api/firms` (`FIRMS_MAP_KEY`)                           | 10 min (proxy TTL 30 min)                                                         |
 | Street Level 📷 | Mapillary street-level imagery (vector tiles, Graph API, MapillaryJS) | `src/layers/streetLevel/` via `src/app/layers/streetLevel.js` | `/api/mapillary/status`, `/api/mapillary/tiles/coverage/{z}/{x}/{y}` (`MAPILLARY_CLIENT_TOKEN`) | camera-driven (320 ms debounce, ≤9 tiles, server memory cache 24 h) |
@@ -6083,3 +6085,9 @@ when their footprints touch or contain one another, never across a seam toleranc
 - `scripts/qa-form-fields.mjs` exercises native selections, number validity,
   calibration commit/cancel and stale-camera/disposal guards against an installed
   controller with fixture ports, plus default/Cyber and narrow translated layouts.
+
+The original OSM extract represents relation 19953989 twice, as a Polygon and
+a MultiLineString. Both geometries are preserved; the query source returns its
+Polygon once. Cesium expands the line parts into separate unique entity IDs,
+so raw feature counts, source identity counts and rendered entity counts differ.
+Do not deduplicate these geometries using an ID-only map.

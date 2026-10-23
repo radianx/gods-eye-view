@@ -27,7 +27,8 @@ export const findInfrastructure = defineTool({
   title: 'Datacenters and dams',
   description:
     'Datacenters (with operator and capacity) or dams (with river and power ' +
-    'output) from OpenStreetMap and IGN Argentina within an area, nearest the center first.',
+    'output) from OpenStreetMap, NVE and IGN Argentina within an area, nearest the center first. ' +
+    'Norwegian rows also include purpose, type, year built, power plant and municipality.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -56,6 +57,15 @@ export const findInfrastructure = defineTool({
           : {
               river: record.river,
               output: record.output,
+              ...(record.source === 'NVE'
+                ? {
+                    purpose: record.purpose,
+                    dam_type: record.damType,
+                    built: record.built,
+                    power_plant: record.powerPlant,
+                    municipality: record.municipality,
+                  }
+                : {}),
               source: record.source ?? null,
               source_id: record.sourceFeatureId ?? null,
               retrieved_at: record.retrievedAt ?? null,

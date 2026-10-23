@@ -56,8 +56,30 @@ repository checks, full unit suite, build, tracking and infrastructure browser
 gates on the resolved candidate. Preserve each original PR head as a merge
 parent in the verification branch; do not rewrite the other contributor's commits.
 
-The original OSM relation 19953989 has both Polygon and MultiLineString
-representations with the same source ID. Preserve both geometries; the analyst
-source returns its supported Polygon once. Do not collapse geometries by ID.
+The original OSM extract represents relation 19953989 twice, as a Polygon and
+a MultiLineString. Both geometries are preserved; the query source returns its
+Polygon once. Cesium expands the line parts into separate unique entity IDs,
+so raw feature counts, source identity counts and rendered entity counts differ.
+Do not deduplicate these geometries using an ID-only map.
+
 Selected map contexts and renderer analyst records retain each provider, just
 as `find_infrastructure` does.
+
+## Coincident NVE records retained for source review
+
+The pinned NVE snapshot has 4,141 source IDs at 4,137 coordinate pairs. Four
+pairs share coordinates but have different register identities; the integration
+preserves them and does not claim their distinctness is verified:
+
+| NVE identities | Names in the snapshot |
+| --- | --- |
+| 1000077 / 3506 | Both unnamed |
+| 2523 / 8717 | Both Stakaldefossen Inntaksdam |
+| 5149 / 5150 | Lendingen sør / Lendingen nord |
+| 7029 / p-59.01669-9.91040 | Hallevannet / unnamed |
+
+These are distinct from the duplicate of dam 4390 already removed by #1009.
+No bundled OSM representative point is within 500 m of an NVE point. Do not
+infer identity from names or coordinates alone: a later refresh or deduplication
+needs NVE/source-author review. Neither the original NVE snapshot nor #1009's
+branch has been changed by this integration.

@@ -11,6 +11,7 @@ import {
  */
 export function createInfrastructureLayers(services) {
   const datacentersUrl = INFRASTRUCTURE_DATA_URLS['local-datacenters'];
+  // Main OSM file, then independently attributed NVE and IGN supplements.
   const damsUrl = infrastructureDataUrls('local-dams');
   const datacenters = createLocalGeoJsonLayer(
     {
@@ -35,7 +36,7 @@ export function createInfrastructureLayers(services) {
       name: 'Dams',
       color: '#0088ff', // Blue
       icon: '▰',
-      source: 'OpenStreetMap / OpenInfraMap · IGN Argentina',
+      source: 'OpenStreetMap / OpenInfraMap · NVE · IGN Argentina',
       osmDerived: true,
       labels: true,
       labelMax: 900,

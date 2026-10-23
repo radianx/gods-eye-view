@@ -1,5 +1,5 @@
 /**
- * Bundled infrastructure layers (OpenStreetMap and IGN Argentina): their
+ * Bundled infrastructure layers (OpenStreetMap, NVE and IGN Argentina): their
  * data files, line-delimited GeoJSON parsing and analyst records.
  */
 
@@ -22,6 +22,7 @@ export const INFRASTRUCTURE_DATA_URLS = Object.freeze({
 export const INFRASTRUCTURE_SUPPLEMENT_URLS = Object.freeze({
   get 'local-dams'() {
     return [
+      new URL('../data/local_data/dams/norway.geojsonl', import.meta.url).href,
       new URL(
         '../data/local_data/argentina_dams/dams.geojsonl',
         import.meta.url,
@@ -161,6 +162,7 @@ export function mapAnalystRecord(raw, layerId = '') {
     capacity,
     river,
     output,
+    ...(layerId === 'local-dams' ? nveDamFields(props.nve, text, num) : {}),
     ...(layerId === 'local-dams'
       ? {
           source:
@@ -179,6 +181,24 @@ export function mapAnalystRecord(raw, layerId = '') {
               : null),
         }
       : {}),
+  };
+}
+
+/**
+ * Register facts for a Norwegian (NVE) dam, null elsewhere so every dam
+ * record keeps one shape.
+ */
+function nveDamFields(nve, text, num) {
+  const facts = nve && typeof nve === 'object' ? nve : {};
+  const purposes = Array.isArray(facts.purpose)
+    ? facts.purpose.map(text).filter(Boolean)
+    : [];
+  return {
+    purpose: purposes.length ? purposes.join(', ') : null,
+    built: num(facts.built),
+    damType: text(facts.damType),
+    powerPlant: text(facts.powerPlant),
+    municipality: text(facts.municipality),
   };
 }
 
