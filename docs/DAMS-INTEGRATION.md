@@ -1,5 +1,8 @@
 # Integrating the independent dam contributions
 
+See [the validation report](DAMS-INTEGRATION-VALIDATION.md) for pinned commits,
+executed checks and the browser/hosted-CI limitations.
+
 The candidate order is **#1009 (NVE) → #1152 (Acaray/Yacyretá) → #1149 (IGN)**.
 The source branches remain independent until their predecessors land. #1009 is
 owned by trygvehhh; changes to its branch or review are for its author/maintainers.
