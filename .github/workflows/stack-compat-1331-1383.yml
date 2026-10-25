@@ -65,8 +65,7 @@ jobs:
       - name: Check package boundaries
         continue-on-error: true
         run: npm run check:boundaries
-      - name: Check formatting
-        continue-on-error: true
+      - name: Check formatting latest radianx patch (must pass)
         run: npm run format:check
       - name: Check U+2014 policy
         continue-on-error: true
