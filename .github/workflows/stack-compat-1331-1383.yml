@@ -1,0 +1,123 @@
+name: Temporary #1331 x #1383 stack compatibility
+on:
+  push:
+    branches:
+      - integration/check-1383-1331-20261025
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GEV_REQUIRE_ALLOCATION_GATE: '0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Integrate upstream PRs in temporary workspace, preserving #1331 on conflicts
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git config user.name "GEV compatibility fixture"
+          git config user.email "compatibility@example.invalid"
+          for id in 1381 1380 1382 1383; do
+            git fetch --no-tags https://github.com/bilawalsidhu/gods-eye-view.git "+refs/pull/${id}/head:refs/remotes/compat/pr${id}"
+            git merge --no-edit --no-ff -X ours "refs/remotes/compat/pr${id}" -m "TEMP: merge #${id} into #1331"
+          done
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const original = JSON.parse(fs.readFileSync('package.json','utf8'));
+          const vite8 = JSON.parse(execFileSync('git',['show','refs/remotes/compat/pr1380:package.json'],{encoding:'utf8'}));
+          for (const section of ['dependencies','devDependencies']) {
+            original[section] = { ...(original[section] || {}), ...(vite8[section] || {}) };
+          }
+          fs.writeFileSync('package.json', JSON.stringify(original,null,2)+'\n');
+          console.log('Stack Vite:', original.devDependencies.vite, 'Cesium:', original.dependencies.cesium, 'jose:', original.dependencies.jose);
+          const voice=fs.readFileSync('server/providers/openai/instructions.js','utf8');
+          const command=fs.readFileSync('server/providers/agent/instructions.js','utf8');
+          if(!voice.includes('export { realtimeDirectives, realtimeInstructions }')) throw Error('Lost realtimeDirectives export');
+          if(!command.includes('realtimeDirectives')) throw Error('Lost shared-command voice import');
+          NODE
+          git status --short
+          git log -5 --oneline
+      - name: Reconcile lockfile and install dependencies
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
+      - name: Focused COMMAND, OAuth and Vite host-security unit tests
+        continue-on-error: true
+        run: |
+          node --test src/agent/instructions.test.mjs src/agent/agentLoop.test.mjs src/agent/agentEndpoints.test.mjs src/agent/routes.test.mjs src/agent/toolSchema.test.mjs src/agent/agentOwnership.test.mjs server/providers/agent/chatgpt/auth.test.mjs server/providers/agent/chatgpt/responses.test.mjs server/providers/agent/chatgpt/store.test.mjs server/providers/common/credential-file.test.mjs src/geminiServer.test.mjs
+      - name: Check translations
+        continue-on-error: true
+        run: npm run i18n
+      - name: Check package boundaries
+        continue-on-error: true
+        run: npm run check:boundaries
+      - name: Check formatting
+        continue-on-error: true
+        run: npm run format:check
+      - name: Check U+2014 policy
+        continue-on-error: true
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const files=execFileSync('git',['ls-files','-z']).toString().split('\0').filter(Boolean);
+          const hits=[];
+          for(const path of files){
+            try{const data=fs.readFileSync(path,'utf8'); if(data.includes('\u2014')) hits.push(path);}catch{}
+          }
+          console.log('U+2014 remaining in '+hits.length+' tracked paths');
+          hits.slice(0,80).forEach(path=>console.log(path));
+          if(hits.length)process.exitCode=1;
+          NODE
+      - name: Full automated test suite
+        continue-on-error: true
+        run: npm test
+      - name: Build Vite 8 + Cesium
+        continue-on-error: true
+        run: npm run build
+      - name: Browser QA ChatGPT UI, camera, command console
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node scripts/qa-agent-chatgpt.mjs
+          echo "ChatGPT browser QA exit=$?"
+          node scripts/qa-agent-camera.mjs
+          echo "Camera browser QA exit=$?"
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > /tmp/gev-compat-preview.log 2>&1 &
+          VITE_PID=$!
+          sleep 8
+          node scripts/qa-agent-console.mjs --offline --url http://127.0.0.1:4173
+          echo "Console browser QA exit=$?"
+          kill "$VITE_PID" || true
+          cat /tmp/gev-compat-preview.log
+      - name: Vite 8 rejects unauthorized Host on local auth API
+        continue-on-error: true
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { createServer } from 'vite';
+          const server = await createServer({server:{host:'127.0.0.1',port:0},logLevel:'error'});
+          try {
+            await server.listen();
+            const port=server.httpServer.address().port;
+            const r=await fetch('http://127.0.0.1:'+port+'/api/agent/chatgpt/status',{headers:{Host:'evil.invalid'}});
+            const body=await r.text();
+            console.log('Unauthorized Host response:',r.status,body.slice(0,200));
+            assert.equal(r.status,403);
+            assert.doesNotMatch(body,/access_token|refresh_token|sk-/i);
+          } finally {await server.close();}
+          NODE
