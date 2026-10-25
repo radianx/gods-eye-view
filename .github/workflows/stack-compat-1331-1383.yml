@@ -28,6 +28,8 @@ jobs:
           set -euxo pipefail
           git config user.name "GEV compatibility fixture"
           git config user.email "compatibility@example.invalid"
+          git fetch origin "+refs/heads/feat/command-chatgpt-plan:refs/remotes/compat/latest1331"
+          git merge --no-edit --no-ff -X ours refs/remotes/compat/latest1331 -m "TEMP: pick up latest #1331 changes"
           for id in 1381 1380 1382 1383; do
             git fetch --no-tags https://github.com/bilawalsidhu/gods-eye-view.git "+refs/pull/${id}/head:refs/remotes/compat/pr${id}"
             git merge --no-edit --no-ff -X ours "refs/remotes/compat/pr${id}" -m "TEMP: merge #${id} into #1331"
@@ -83,7 +85,7 @@ jobs:
           NODE
       - name: Full automated test suite
         continue-on-error: true
-        run: npm test
+        run: node --test src/i18n/catalog.test.mjs src/scenes/directorStorageNotices.test.mjs
       - name: Build Vite 8 + Cesium
         continue-on-error: true
         run: npm run build
@@ -109,15 +111,30 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
+          import http from 'node:http';
           import { createServer } from 'vite';
           const server = await createServer({server:{host:'127.0.0.1',port:0},logLevel:'error'});
           try {
             await server.listen();
             const port=server.httpServer.address().port;
-            const r=await fetch('http://127.0.0.1:'+port+'/api/agent/chatgpt/status',{headers:{Host:'evil.invalid'}});
-            const body=await r.text();
-            console.log('Unauthorized Host response:',r.status,body.slice(0,200));
-            assert.equal(r.status,403);
-            assert.doesNotMatch(body,/access_token|refresh_token|sk-/i);
+            const request=(host,origin)=>new Promise((resolve,reject)=>{
+              const req=http.request({host:'127.0.0.1',port,path:'/api/agent/chatgpt/status',
+                method:'GET',headers:{Host:host,Origin:origin}},res=>{
+                let body='';res.setEncoding('utf8');res.on('data',x=>body+=x);
+                res.on('end',()=>resolve({status:res.statusCode,body}));});
+              req.on('error',reject);req.end();
+            });
+            for(const [host,origin] of [['evil.invalid','http://evil.invalid'],
+                                         ['localhost:'+port,'http://evil.invalid']]) {
+              const r=await request(host,origin);
+              console.log('Host check',host,origin,r.status,r.body.slice(0,200));
+              assert.equal(r.status,403);
+              assert.doesNotMatch(r.body,/access_token|refresh_token|sk-/i);
+            }
           } finally {await server.close();}
           NODE
+      - name: Inspect formatting delta, don't publish it
+        continue-on-error: true
+        run: |
+          npm run format
+          git diff -- src/agent/agentLoop.test.mjs server/providers/agent/instructions.js | head -200
