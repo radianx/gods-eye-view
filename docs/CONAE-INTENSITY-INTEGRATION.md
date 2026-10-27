@@ -108,3 +108,11 @@ not part of the mixed thermal matrix and must not be inferred from the 9/9.
 The final locally retained integration revision is `cd5951ec` on
 `integration/conae-intensity`. Browser runs blocked or lacked external map/font
 assets; screenshots establish app lifecycle only, not basemap visual acceptance.
+
+Tracking gate limitation: `track-regression.mjs` failed its boot-console precheck
+on 9 external-resource errors (`ERR_EMPTY_RESPONSE`, including Google Fonts and
+Esri metadata). Aircraft injection, tracked-share restoration, selected-subject
+context, analyst handoff and the 30-frame zero-jitter check passed before the
+run was interrupted at the track-switch stage. Its remaining scenarios are
+unvalidated; the interrupted run is **not** a successful tracking gate. No
+tracking or network-policy code was changed to hide this environmental failure.
