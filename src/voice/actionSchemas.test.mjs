@@ -45,12 +45,9 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // S2 GhostMaps extends the generated layer enums.
     // Panel adds named voice targets and timeout; shared Panel/Cockpit guidance
     // is consolidated without changing either feature's arguments.
-    // #1467 independently retires Operator; pin BOTH explicitly reviewed payloads.
-    GEV_ACTION_SCHEMAS.find(
-      (tool) => tool.name === 'set_hud',
-    ).parameters.properties.layout.enum.includes('operator')
-      ? '01eb522d619c9a838a0e8f23b3417321867e8aedd2e0c98e942bfee565df637d'
-      : 'a76545934d063400664a2515ac7ed638dc08e7ade9a0443015e6aa778966aa82',
+    // Temporary #1331 combination retains street-level-panel in set_panel_open.
+    // Relative to #1479 this is the only schema change; Snow stays retired.
+    '858f728d036a5667087adfa78c4c5c818daa87c33525921c84bb2aa1a850dda2',
   );
 });
 
@@ -180,6 +177,19 @@ test('all legacy action arguments are byte-identical after removing the delibera
     ['tactical', 'minimal', 'cyber'],
   );
   hud.enum = ['tactical', 'operator', 'minimal'];
+  // Snow is retired from set_visual_style; restore it to keep the legacy pin.
+  const visualStyle = legacy.find((tool) => tool.name === 'set_visual_style')
+    .parameters.properties.style;
+  assert.deepEqual(visualStyle.enum, [
+    'normal',
+    'retro',
+    'surveillance',
+    'thermal',
+    'anime',
+    'noir',
+  ]);
+  visualStyle.enum = [...visualStyle.enum, 'snow'];
+
   // Derived by applying the same removals to the 4b56d0e9 actionSchemas.
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
