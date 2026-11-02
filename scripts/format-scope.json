@@ -1119,5 +1119,20 @@
   "src/testSupport/shareViewFixtures.mjs",
   "src/ui/shareLinks.test.mjs",
   "src/ui/shareButton.test.mjs",
-  "src/share/shareLinkPath.test.mjs"
+  "src/share/shareLinkPath.test.mjs",
+  "src/agent/boxResize.js",
+  "src/agent/agentConsole.test.mjs",
+  "src/agent/agentConsoleMarkup.test.mjs",
+  "src/agent/agentEndpoints.test.mjs",
+  "src/agent/agentLoop.test.mjs",
+  "src/agent/agentOwnership.test.mjs",
+  "src/agent/consoleBox.test.mjs",
+  "src/agent/conversation.test.mjs",
+  "src/agent/cost.test.mjs",
+  "src/agent/diagnostics.test.mjs",
+  "src/agent/instructions.test.mjs",
+  "src/agent/registry.test.mjs",
+  "src/agent/routes.test.mjs",
+  "src/agent/toolSchema.test.mjs",
+  "src/agent/upstream.test.mjs"
 ]
