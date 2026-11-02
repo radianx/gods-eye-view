@@ -114,8 +114,9 @@ function readConsole(page) {
     return {
       mounted: Boolean(dialog),
       open: dialog?.open === true,
-      chipExpanded:
-        document.getElementById('agent-console-chip')?.getAttribute('aria-expanded'),
+      chipExpanded: document
+        .getElementById('agent-console-chip')
+        ?.getAttribute('aria-expanded'),
       status: document.getElementById('agent-status')?.textContent ?? '',
       cost: document.getElementById('agent-cost')?.textContent ?? '',
       providers: options('agent-provider'),
@@ -193,7 +194,10 @@ async function main() {
       chipHidden: document.getElementById('agent-console-chip')?.hidden,
     }));
     check('the application mounted the console', mount.handle);
-    check('the chip is revealed once the console mounts', mount.chipHidden === false);
+    check(
+      'the chip is revealed once the console mounts',
+      mount.chipHidden === false,
+    );
     check(
       'nothing is fetched before the console is opened',
       agentCalls.length === 0,
@@ -245,7 +249,10 @@ async function main() {
         await page.select('#agent-model', options.model);
         state = await readConsole(page);
       }
-      check('a cost estimate is shown for the selected model', Boolean(state.cost));
+      check(
+        'a cost estimate is shown for the selected model',
+        Boolean(state.cost),
+      );
       check('input is enabled once a model is selected', !state.inputDisabled);
 
       if (!state.inputDisabled) {
@@ -271,7 +278,9 @@ async function main() {
             `    ${entry.kind}: ${entry.text}${entry.outcome ? ` [${entry.outcome}]` : ''}`,
           );
         }
-        const toolEntries = state.entries.filter((entry) => entry.kind === 'tool');
+        const toolEntries = state.entries.filter(
+          (entry) => entry.kind === 'tool',
+        );
         check(
           'the typed command issued at least one tool call',
           toolEntries.length > 0,
@@ -311,7 +320,9 @@ async function main() {
     console.log('window');
     const geometry = () =>
       page.evaluate(() => {
-        const rect = document.getElementById('agent-console').getBoundingClientRect();
+        const rect = document
+          .getElementById('agent-console')
+          .getBoundingClientRect();
         return {
           left: Math.round(rect.left),
           top: Math.round(rect.top),
@@ -339,7 +350,10 @@ async function main() {
     await page.mouse.move(placed.left + 120, placed.top + 14);
     await page.mouse.down();
     for (let step = 1; step <= 8; step += 1) {
-      await page.mouse.move(placed.left + 120 + step * 30, placed.top + 14 + step * 8);
+      await page.mouse.move(
+        placed.left + 120 + step * 30,
+        placed.top + 14 + step * 8,
+      );
     }
     await page.mouse.up();
     const dragged = await geometry();
@@ -382,7 +396,10 @@ async function main() {
     await page.keyboard.press('Escape');
     state = await readConsole(page);
     check('Escape closes the dialog', !state.open);
-    check('the chip reports its collapsed state', state.chipExpanded === 'false');
+    check(
+      'the chip reports its collapsed state',
+      state.chipExpanded === 'false',
+    );
 
     const renderErrors = await readRenderErrors(page);
     check(

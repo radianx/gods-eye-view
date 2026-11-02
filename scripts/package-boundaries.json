@@ -444,7 +444,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -465,7 +471,6 @@
       "src/styles/thermal.js",
       "src/styles/anime.js",
       "src/styles/noir.js",
-      "src/styles/snow.js",
       "src/i18n/marker.js"
     ],
     "external": ["cesium"]
@@ -485,7 +490,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -520,7 +531,13 @@
       "src/ui/unitLabels.js",
       "src/ui/keyGuidance.js",
       "src/ui/statusText.js",
-      "src/ui/statusBadge.js"
+      "src/ui/statusBadge.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -539,7 +556,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -557,7 +580,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -580,7 +609,13 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/unitLabels.js",
-      "src/ui/statusBadge.js"
+      "src/ui/statusBadge.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -607,7 +642,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -643,7 +684,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -661,7 +708,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -707,7 +760,6 @@
       "src/styles/anime.js",
       "src/styles/noir.js",
       "src/styles/retro.js",
-      "src/styles/snow.js",
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/ui/applicationShell.js",
@@ -826,7 +878,14 @@
       "src/ui/layerNames.js",
       "src/ui/statusText.js",
       "src/ui/statusBadge.js",
-      "src/scopeMaskPolicy.js"
+      "src/scopeMaskPolicy.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json",
+      "src/visualStylePolicy.js"
     ],
     "external": ["cesium"]
   },
@@ -944,7 +1003,14 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json",
+      "src/visualStylePolicy.js"
     ],
     "external": ["cesium"]
   },
@@ -1013,7 +1079,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1062,7 +1134,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1126,7 +1204,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1159,7 +1243,13 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/unitLabels.js",
-      "src/layers/recentImagery/display.js"
+      "src/layers/recentImagery/display.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1189,7 +1279,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1222,7 +1318,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "satellite.js"]
   },
@@ -1256,7 +1358,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1301,7 +1409,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/layers/installations/classLabel.js"
+      "src/layers/installations/classLabel.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "@mapbox/vector-tile", "pbf"]
   },
@@ -1339,7 +1453,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1390,7 +1510,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "pbf", "@mapbox/vector-tile"]
   },
@@ -1421,7 +1547,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1471,7 +1603,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1537,7 +1675,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/layers/streetLevel/providers/mapillary/policy.js"
+      "src/layers/streetLevel/providers/mapillary/policy.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "pbf", "@mapbox/vector-tile", "mapillary-js"]
   },
@@ -1567,7 +1711,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "@mapbox/vector-tile", "pbf"]
   },
@@ -1609,7 +1759,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1633,7 +1789,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1691,7 +1853,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -1766,7 +1934,13 @@
       "src/sources/requestDeadline.js",
       "src/i18n/marker.js",
       "src/voice/hudResult.js",
-      "src/hudLayoutPolicy.js"
+      "src/hudLayoutPolicy.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -2279,12 +2453,10 @@
       "src/styles/anime.js",
       "src/styles/noir.js",
       "src/styles/retro.js",
-      "src/styles/snow.js",
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/ui/applicationShell.js",
       "src/ui/mobileShell.js",
-      "src/exclusiveSurfaces.js",
       "src/ui/localePicker.js",
       "src/ui/cyberSonarControls.js",
       "src/ui/locationNavigation.js",
@@ -2673,7 +2845,16 @@
       "src/agent/responseReasoning.js",
       "src/sceneCommandRelease.js",
       "src/scopeMaskPolicy.js",
-      "src/voice/hudResult.js"
+      "src/voice/hudResult.js",
+      "src/hudPlaceLookup.js",
+      "src/layers/weather/display.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json",
+      "src/visualStylePolicy.js"
     ],
     "external": [
       "hls.js",
@@ -3252,7 +3433,14 @@
       "src/layers/streetLevel/providers/mapillary/policy.js",
       "src/data/geoImportImages.js",
       "src/data/geoImportPins.js",
-      "src/data/geoFileImport.js"
+      "src/data/geoFileImport.js",
+      "src/layers/weather/display.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": [
       "hls.js",
@@ -3351,7 +3539,13 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/i18n/index.js",
-      "src/i18n/supplements/command-ar.json"
+      "src/i18n/supplements/command-ar.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -3375,7 +3569,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -3393,7 +3593,6 @@
       "src/styles/anime.js",
       "src/styles/noir.js",
       "src/styles/retro.js",
-      "src/styles/snow.js",
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/ui/applicationShortcuts.js",
@@ -3415,7 +3614,14 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/scopeMaskPolicy.js",
-      "src/ui/displayControls.js"
+      "src/ui/displayControls.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json",
+      "src/visualStylePolicy.js"
     ],
     "external": ["cesium"]
   },
@@ -3441,7 +3647,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -3535,7 +3747,13 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -3595,7 +3813,13 @@
       "src/ui/statusText.js",
       "src/voice/providerCapabilities.js",
       "src/voice/hudResult.js",
-      "src/hudLayoutPolicy.js"
+      "src/hudLayoutPolicy.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": []
   },
@@ -3849,7 +4073,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -3894,7 +4124,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium", "pbf"]
   },
@@ -3949,7 +4185,13 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -3969,7 +4211,13 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/statusText.js",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -3993,7 +4241,6 @@
       "src/styles/anime.js",
       "src/styles/noir.js",
       "src/styles/retro.js",
-      "src/styles/snow.js",
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/view/index.js",
@@ -4002,7 +4249,8 @@
       "src/data/idSwitches.js",
       "src/data/detectionPolicy.js",
       "src/scopeMaskPolicy.js",
-      "src/i18n/marker.js"
+      "src/i18n/marker.js",
+      "src/visualStylePolicy.js"
     ],
     "external": []
   },
@@ -4032,7 +4280,13 @@
       "src/data/geoImportImages.js",
       "src/data/geoImportPins.js",
       "src/layers/streetLevel/tileMath.js",
-      "src/layers/streetLevel/view.js"
+      "src/layers/streetLevel/view.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },
@@ -4107,7 +4361,8 @@
       "src/tools/views.js",
       "src/tools/globePanel.js",
       "src/tools/queries/panelRequest.js",
-      "src/geoDistance.js"
+      "src/geoDistance.js",
+      "src/visualStylePolicy.js"
     ],
     "external": ["satellite.js"]
   },
@@ -4208,7 +4463,8 @@
       "src/view/index.js",
       "src/data/idSwitches.js",
       "src/data/layerState.js",
-      "src/data/layerStateTokenReservations.json"
+      "src/data/layerStateTokenReservations.json",
+      "src/visualStylePolicy.js"
     ],
     "external": []
   },
@@ -4228,7 +4484,13 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/statusText.js",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/i18n/locales/de.json",
+      "src/i18n/locales/fr.json",
+      "src/i18n/locales/it.json",
+      "src/i18n/locales/ja.json",
+      "src/i18n/locales/pt.json",
+      "src/i18n/locales/uk.json"
     ],
     "external": ["cesium"]
   },

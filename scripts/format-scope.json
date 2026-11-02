@@ -212,7 +212,6 @@
   "src/styles/thermal.js",
   "src/styles/anime.js",
   "src/styles/noir.js",
-  "src/styles/snow.js",
   "scripts/qa-visual-effects.mjs",
   "scripts/qa-draw-tool.mjs",
   "scripts/qa-geo-import.mjs",
@@ -703,7 +702,6 @@
   "src/ui/shareRestoration.js",
   "src/ui/visualSettings.js",
   "src/ui/panelChrome.js",
-  "src/ui/panelChrome.radioOwnership.test.mjs",
   "src/testSupport/readShellSource.mjs",
   "src/ui/stateOwners.test.mjs",
   "src/layers/flights/records.js",
@@ -1157,5 +1155,9 @@
   "src/agent/feedProvenanceIntegration.test.mjs",
   "src/i18n/supplements/command-ar.json",
   "src/agent/rtlIntegration.test.mjs",
-  "server/providers/agent/tools.js"
+  "server/providers/agent/tools.js",
+  "src/data/cctvA22.test.mjs",
+  "src/layers/weather/display.test.mjs",
+  "src/hudSummaryGate.test.mjs",
+  "src/voice/hudPlaceLabels.test.mjs"
 ]
