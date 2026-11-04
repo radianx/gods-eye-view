@@ -13,7 +13,8 @@ import {
 import { estimateCommandCostUsd } from '../../../src/agent/cost.js';
 import { readRequestBody } from '../common/request.js';
 import { enforceRateLimit } from '../openai/rate-limit.js';
-import { GEV_AGENT_TOOLS } from './tools.js';
+import { agentTools } from './tools.js';
+import { parseOverpassUpstreams } from '../overpass/constants.js';
 import { diagnoseToolTurn } from './diagnostics.js';
 import { buildAgentInstructions } from './instructions.js';
 import { agentPromptPrefixTokens } from './prefix.js';
@@ -63,18 +64,17 @@ const AGENT_REQUEST_MAX_BYTES = 512 * 1024;
 /** Correction attempts allowed before a malformed call is surfaced. */
 const MAX_TOOL_CORRECTIONS = 2;
 
-/** Chat-shaped tool schemas and their index, derived once per process. */
-let _chatTools;
-let _toolIndex;
-
-function chatTools() {
-  if (!_chatTools) _chatTools = toChatCompletionTools(GEV_AGENT_TOOLS);
-  return _chatTools;
+/** Reuse voice/chat's operator-configured tool policy; validate that same set. */
+function toolOptions(env) {
+  return {
+    overpass: parseOverpassUpstreams(env.OVERPASS_UPSTREAMS).length > 0,
+  };
 }
-
-function toolIndex() {
-  if (!_toolIndex) _toolIndex = indexToolsByName(GEV_AGENT_TOOLS);
-  return _toolIndex;
+function chatTools(options) {
+  return toChatCompletionTools(agentTools(options));
+}
+function toolIndex(options) {
+  return indexToolsByName(agentTools(options));
 }
 
 function sendJson(res, statusCode, payload) {
@@ -172,9 +172,11 @@ function createAgentConfigHandler({
         ),
       defaultProvider: configured.id,
       defaultModel: resolveConfiguredModel(configured, env),
-      toolCount: GEV_AGENT_TOOLS.length,
-      promptPrefixTokens: agentPromptPrefixTokens(),
-      minContextTokens: toolContextFloor(agentPromptPrefixTokens()),
+      toolCount: agentTools(toolOptions(env)).length,
+      promptPrefixTokens: agentPromptPrefixTokens(toolOptions(env)),
+      minContextTokens: toolContextFloor(
+        agentPromptPrefixTokens(toolOptions(env)),
+      ),
     });
   };
 }
@@ -230,7 +232,7 @@ function createAgentModelsHandler({
       return;
     }
 
-    const prefixTokens = agentPromptPrefixTokens();
+    const prefixTokens = agentPromptPrefixTokens(toolOptions(env));
     const { usable, rejected } = gateModels(listing.models, {
       minContextTokens: toolContextFloor(prefixTokens),
       allowList: modelAllowList(resolved.provider, env),
@@ -286,13 +288,13 @@ function toolCallPairingId(call, taken) {
 }
 
 /** Shape the tool calls one completion asked for, or the reason it cannot run. */
-function prepareCalls(message) {
+function prepareCalls(message, options) {
   const raw = Array.isArray(message?.tool_calls) ? message.tool_calls : [];
   const taken = new Set();
   return raw.map((call) => {
     const id = toolCallPairingId(call, taken);
     taken.add(id);
-    return { id, result: prepareToolCall(call?.function, toolIndex()) };
+    return { id, result: prepareToolCall(call?.function, toolIndex(options)) };
   });
 }
 
@@ -389,7 +391,10 @@ function createAgentCommandHandler({
       if (selection.fallback) res.setHeader('X-GEV-Agent-Model-Fallback', '1');
 
       const messages = buildRequestMessages({
-        instructions: buildAgentInstructions({ annotationGuidance }),
+        instructions: buildAgentInstructions({
+          annotationGuidance,
+          ...toolOptions(env),
+        }),
         messages: payload.messages,
       });
 
@@ -409,7 +414,7 @@ function createAgentCommandHandler({
           ...resolved,
           model,
           messages: [...messages, ...corrections],
-          tools: chatTools(),
+          tools: chatTools(toolOptions(env)),
           fetchImpl,
         });
 
@@ -429,7 +434,7 @@ function createAgentCommandHandler({
           return;
         }
 
-        const prepared = prepareCalls(completion.message);
+        const prepared = prepareCalls(completion.message, toolOptions(env));
         const invalid = prepared.filter((entry) => !entry.result.ok);
 
         // Heuristic health checks on the FIRST turn only: a correction turn

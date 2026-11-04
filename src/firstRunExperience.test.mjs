@@ -983,7 +983,13 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // ordering while allowing source formatting. Derived from the unchanged
   // release schema before formatting (the previous source-byte pin passed).
   const legacyTools = structuredClone(GEV_REALTIME_TOOLS).filter(
-    (tool) => tool.name !== 'set_cyber_sonar',
+    (tool) =>
+      ![
+        'set_cyber_sonar',
+        'resolve_area',
+        'find_imagery',
+        'osm_query',
+      ].includes(tool.name),
   );
   const hudLayout = legacyTools.find((tool) => tool.name === 'set_hud')
     .parameters.properties.layout;
@@ -1028,15 +1034,16 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // Radio markup and the complete production-request comparison pin locality.
   // Panel adds timeout and named voice/provider targets; consolidated guidance
   // preserves the mission mapping and globe-rotation arguments.
-  // Street Level adds a panel target; redundant panel-description words are removed to retain the prompt budget.
   // S2 GhostMaps extends the generated layer enums; both feature contracts remain.
   // The layer alias hint leaves out aliases the layer id already spells.
   // The Utilities panel adds one set_panel_open target; Sea Marks and Ski
-  // Pistes extend the generated layer enums and alias hint.
-  assert.equal(block.length, 31025, 'serialized tool schema length drifted');
+  // Pistes extend the generated layer enums and alias hint; voice geometry
+  // adds the analyst area scopes and the osm-places layer.
+  // COMMAND retains Street Level as an explicit panel target and its concise routing hint.
+  assert.equal(block.length, 31317, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '3909df16fe2ba84cc68145e7fd754787947d49fafe851c759af921c1dce3ba83',
+    '2eedd863ab03cce9bd6cd4dd52be6ba62002e5a8c855970bf154dec68e0c5293',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(

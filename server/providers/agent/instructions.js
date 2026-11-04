@@ -97,8 +97,9 @@ function adaptDirectives(directives, adaptations = TEXT_ADAPTATIONS) {
  * @param {{annotationGuidance?: string}} [options]
  * @returns {string[]}
  */
-function agentDirectives({ annotationGuidance } = {}) {
-  return adaptDirectives(realtimeDirectives(annotationGuidance)).directives;
+function agentDirectives({ annotationGuidance, overpass = false } = {}) {
+  return adaptDirectives(realtimeDirectives(annotationGuidance, { overpass }))
+    .directives;
 }
 
 /**

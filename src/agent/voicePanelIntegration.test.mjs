@@ -220,7 +220,8 @@ test('manual focus/tab choice and unmount defeat pending typed reveals', async (
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
     );
   await h.settle();
-  assert.equal(h.doc.activeElement.id, 'gev-voice-settings-button');
+  // #1507 Escape returns from Settings to Preview within the shared panel.
+  assert.equal(h.doc.activeElement.id, 'gev-voice-preview-tab');
   h.commands.session.destroy();
   const reply = await h.send('Open Voice Settings', [panel('voice-settings')]);
   assert.equal(reply.ok, false);

@@ -1,5 +1,5 @@
 import { CHARS_PER_TOKEN } from '../../../src/agent/conversation.js';
-import { GEV_AGENT_TOOLS } from './tools.js';
+import { agentTools } from './tools.js';
 import { buildAgentInstructions } from './instructions.js';
 import { toChatCompletionTools } from './toolSchema.js';
 
@@ -21,8 +21,9 @@ import { toChatCompletionTools } from './toolSchema.js';
 
 /** Serialized size of the fixed request prefix, in characters. */
 function prefixCharacters({
-  instructions = buildAgentInstructions(),
-  tools = toChatCompletionTools(GEV_AGENT_TOOLS),
+  overpass = false,
+  instructions = buildAgentInstructions({ overpass }),
+  tools = toChatCompletionTools(agentTools({ overpass })),
 } = {}) {
   return String(instructions).length + JSON.stringify(tools).length;
 }
@@ -37,20 +38,9 @@ function estimatePrefixTokens(parts = {}) {
   return Math.ceil(prefixCharacters(parts) / CHARS_PER_TOKEN);
 }
 
-// Computed once on first use, not at import: the instruction builder reads the
-// voice manual and the schema reshape walks every tool, and both are stable
-// for the life of the process.
-//
-// Stable because no caller passes `annotationGuidance`, so this measures the
-// prompt the command handler actually sends. Wiring that option without
-// threading it through here would leave the model-context floor, the cost
-// estimate and the truncation warning all measuring a prompt nobody sends.
-let cached;
-
-/** The running server's prefix estimate. */
-function agentPromptPrefixTokens() {
-  if (cached === undefined) cached = estimatePrefixTokens();
-  return cached;
+/** Estimate the same configured tool set offered by the command handler. */
+function agentPromptPrefixTokens(options = {}) {
+  return estimatePrefixTokens(options);
 }
 
 export { agentPromptPrefixTokens, estimatePrefixTokens, prefixCharacters };

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
-import { GEV_AGENT_TOOLS } from '../../server/providers/agent/tools.js';
+import { agentTools } from '../../server/providers/agent/tools.js';
 import { agentPromptPrefixTokens } from '../../server/providers/agent/prefix.js';
 import {
   MIN_TOOL_CONTEXT_TOKENS,
@@ -134,7 +134,7 @@ test('config reports the providers, the tool count and the derived prefix size',
   );
   assert.equal(res.json.defaultProvider, 'openai');
   assert.equal(res.json.defaultModel, 'gpt-5-mini');
-  assert.equal(res.json.toolCount, GEV_AGENT_TOOLS.length);
+  assert.equal(res.json.toolCount, agentTools().length);
   assert.equal(res.json.promptPrefixTokens, agentPromptPrefixTokens());
   assert.ok(res.json.minContextTokens > 4096);
   assert.doesNotMatch(res.body, /sk-test/);
@@ -302,7 +302,7 @@ test('the app manual is sent, and a client system turn cannot replace it', async
   assert.equal(sent.filter((message) => message.role === 'system').length, 1);
   assert.match(sent[0].content, /^You are GEV Command,/);
   assert.equal(sent[1].content, 'hello');
-  assert.equal(fetchImpl.calls[0].body.tools.length, GEV_AGENT_TOOLS.length);
+  assert.equal(fetchImpl.calls[0].body.tools.length, agentTools().length);
 });
 
 test('a malformed model id runs the configured default and says it fell back', async () => {
@@ -830,4 +830,57 @@ test('a typed HUD caption is offered, schema-validated and returned for the shar
   );
   assert.ok(tool);
   assert.deepEqual(tool.function.parameters.required, ['area']);
+});
+
+test('COMMAND offers and validates the same configured Overpass policy as dock chat', async () => {
+  for (const overpass of [false, true]) {
+    const env = {
+      ...KEYED,
+      ...(overpass
+        ? { OVERPASS_UPSTREAMS: 'https://overpass.example/api/interpreter' }
+        : {}),
+    };
+    const fetchImpl = stubFetch([answerReply('Done.')]);
+    const res = response();
+    await createAgentCommandHandler({ env, fetchImpl, limiter: admitAll })(
+      request({
+        method: 'POST',
+        body: JSON.stringify({
+          provider: 'openai',
+          model: 'gpt-5-mini',
+          messages: [{ role: 'user', content: 'hello' }],
+        }),
+      }),
+      res,
+    );
+    assert.equal(res.statusCode, 200);
+    const sent = fetchImpl.calls[0].body;
+    assert.equal(
+      sent.tools.some((tool) => tool.function.name === 'osm_query'),
+      overpass,
+    );
+    assert.equal(sent.messages[0].content.includes('then osm_query'), overpass);
+    const config = response();
+    createAgentConfigHandler({ env, limiter: admitAll })(request(), config);
+    assert.equal(config.json.toolCount, sent.tools.length);
+    assert.equal(
+      config.json.promptPrefixTokens,
+      agentPromptPrefixTokens({ overpass }),
+    );
+  }
+  const fetchImpl = stubFetch(() => toolCallReply('osm_query', {}));
+  const res = response();
+  await createAgentCommandHandler({ env: KEYED, fetchImpl, limiter: admitAll })(
+    request({
+      method: 'POST',
+      body: JSON.stringify({
+        provider: 'openai',
+        model: 'gpt-5-mini',
+        messages: [{ role: 'user', content: 'query' }],
+      }),
+    }),
+    res,
+  );
+  assert.equal(res.json.toolCalls.length, 0);
+  assert.equal(res.json.toolCallFailed, true);
 });
