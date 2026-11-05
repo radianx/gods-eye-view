@@ -1,0 +1,317 @@
+diff --git a/server/providers/cctv.js b/server/providers/cctv.js
+index a977f4e7..1191214e 100644
+--- a/server/providers/cctv.js
++++ b/server/providers/cctv.js
+@@ -19,6 +19,10 @@ import { admitSameSiteKeyless } from './common/same-site.js';
+ import { PROXY_SIGNALS } from '../../src/localRequestGate.mjs';
+ import { createHlsPuller } from './cctv/stream.js';
+ import { googleServerApiKey } from './places/google-key.js';
++import {
++  createStreetViewBudget,
++  registeredStreetViewLocation,
++} from './cctv/streetViewGuard.js';
+ export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
+ /**
+  * Vite plugin: CCTV camera proxy with source registry, frame/media serving,
+@@ -43,6 +47,8 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+   const HEALTH_MAX_ENTRIES = CCTV_MAX_SOURCES_CEILING;
+   /** Live HLS strategies (see ./cctv/stream.js). Shared across dev and preview. */
+   const puller = createHlsPuller();
++  // Global per-process cap: changing camera IDs cannot multiply Google spend.
++  const streetViewBudget = createStreetViewBudget();
+ 
+   /** Update the health entry for a camera, evicting the oldest entry if at capacity. */
+   const setHealth = (cameraId, patch) => {
+@@ -90,7 +96,12 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+    */
+   const streetViewFallback = async ({ lat, lon, heading, fov, pitch }) => {
+     const streetViewKey = googleServerApiKey();
+-    if (!streetViewKey || !Number.isFinite(lat) || !Number.isFinite(lon))
++    if (
++      !streetViewKey ||
++      !Number.isFinite(lat) ||
++      !Number.isFinite(lon) ||
++      !streetViewBudget.consume()
++    )
+       return null;
+     try {
+       const sv = new URL('https://maps.googleapis.com/maps/api/streetview');
+@@ -509,13 +520,6 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+         const source = sourceById.get(cameraId);
+         const label = url.searchParams.get('label') || source?.name || cameraId;
+         const city = url.searchParams.get('city') || source?.city || '';
+-        const lat = Number(url.searchParams.get('lat') || source?.lat);
+-        const lon = Number(url.searchParams.get('lon') || source?.lon);
+-        const heading = Number(
+-          url.searchParams.get('heading') || source?.headingDeg,
+-        );
+-        const fov = Number(url.searchParams.get('fov') || source?.fovDeg);
+-        const pitch = Number(url.searchParams.get('pitch') || source?.pitchDeg);
+ 
+         // Only use server-registered upstream URLs — never accept client-supplied URLs
+         // (prevents SSRF via ?upstream= query parameter)
+@@ -552,15 +556,13 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+         const forwarded = PROXY_SIGNALS.some(
+           (name) => req.headers?.[name] !== undefined,
+         );
+-        const sv = forwarded
+-          ? null
+-          : await streetViewFallback({
+-              lat,
+-              lon,
+-              heading,
+-              fov,
+-              pitch,
+-            });
++        // The catalog, not the URL query, owns billable Street View locations.
++        // Unknown IDs and invalid registered coordinates get a free SVG fallback.
++        const registeredLocation = registeredStreetViewLocation(source);
++        const sv =
++          forwarded || !registeredLocation
++            ? null
++            : await streetViewFallback(registeredLocation);
+         if (sv?.ok) {
+           setHealth(cameraId, {
+             status: 'degraded',
+diff --git a/server/providers/cctv/streetViewGuard.js b/server/providers/cctv/streetViewGuard.js
+new file mode 100644
+index 00000000..0efc3eaa
+--- /dev/null
++++ b/server/providers/cctv/streetViewGuard.js
+@@ -0,0 +1,73 @@
++/** Server-only guard for metered CCTV Street View fallback requests. */
++export const STREET_VIEW_WINDOW_MS = 60_000;
++export const STREET_VIEW_MAX_REQUESTS = 12;
++
++/**
++ * Accept only a registered source with valid geographic coordinates.
++ * Query-string overrides are deliberately ignored: they are untrusted input.
++ */
++export function registeredStreetViewLocation(source) {
++  if (!source || typeof source.id !== 'string' || !source.id.trim())
++    return null;
++  if (
++    source.lat == null ||
++    source.lon == null ||
++    (typeof source.lat === 'string' && !source.lat.trim()) ||
++    (typeof source.lon === 'string' && !source.lon.trim())
++  )
++    return null;
++  const lat = Number(source.lat);
++  const lon = Number(source.lon);
++  if (
++    !Number.isFinite(lat) ||
++    !Number.isFinite(lon) ||
++    lat < -90 ||
++    lat > 90 ||
++    lon < -180 ||
++    lon > 180
++  )
++    return null;
++  const heading = Number(source.headingDeg);
++  const fov = Number(source.fovDeg);
++  const pitch = Number(source.pitchDeg);
++  return {
++    lat,
++    lon,
++    heading: Number.isFinite(heading) ? ((heading % 360) + 360) % 360 : 0,
++    fov: Number.isFinite(fov) ? Math.max(20, Math.min(120, fov)) : 80,
++    pitch: Number.isFinite(pitch) ? Math.max(-40, Math.min(20, pitch)) : 0,
++  };
++}
++
++/**
++ * A bounded per-process budget shared by all CCTV cameras. Count attempts
++ * before the upstream fetch (including failed requests), never after it.
++ */
++export function createStreetViewBudget({
++  now = Date.now,
++  windowMs = STREET_VIEW_WINDOW_MS,
++  maxRequests = STREET_VIEW_MAX_REQUESTS,
++} = {}) {
++  if (
++    !Number.isFinite(windowMs) ||
++    windowMs <= 0 ||
++    !Number.isSafeInteger(maxRequests) ||
++    maxRequests < 1
++  ) {
++    throw new TypeError('Invalid Street View request budget');
++  }
++  let started = now();
++  let used = 0;
++  return {
++    consume() {
++      const time = now();
++      if (time < started || time - started >= windowMs) {
++        started = time;
++        used = 0;
++      }
++      if (used >= maxRequests) return false;
++      used += 1;
++      return true;
++    },
++  };
++}
+diff --git a/server/providers/cctv/streetViewGuard.test.mjs b/server/providers/cctv/streetViewGuard.test.mjs
+new file mode 100644
+index 00000000..54169c0f
+--- /dev/null
++++ b/server/providers/cctv/streetViewGuard.test.mjs
+@@ -0,0 +1,157 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import {
++  STREET_VIEW_MAX_REQUESTS,
++  createStreetViewBudget,
++  registeredStreetViewLocation,
++} from './streetViewGuard.js';
++import { cctvProxy } from '../cctv.js';
++
++test('registered cameras require valid geographic coordinates', () => {
++  for (const invalid of [
++    null,
++    { id: 'x', lat: null, lon: 0 },
++    { id: 'x', lat: '', lon: 0 },
++    { id: 'x', lat: '  ', lon: 0 },
++    { id: 'x', lat: 0, lon: '' },
++    { id: 'x', lat: 91, lon: 0 },
++    { id: 'x', lat: 0, lon: 181 },
++    { id: 'x', lat: 'bad', lon: 0 },
++    { id: 'x', lat: Infinity, lon: 0 },
++    { lat: 10, lon: 20 },
++  ]) {
++    assert.equal(registeredStreetViewLocation(invalid), null);
++  }
++  assert.deepEqual(
++    registeredStreetViewLocation({
++      id: 'registered',
++      lat: 10,
++      lon: -20,
++      headingDeg: -10,
++      fovDeg: 900,
++      pitchDeg: -900,
++    }),
++    { lat: 10, lon: -20, heading: 350, fov: 120, pitch: -40 },
++  );
++  assert.deepEqual(
++    registeredStreetViewLocation({ id: 'zero', lat: 0, lon: 0 }),
++    { lat: 0, lon: 0, heading: 0, fov: 80, pitch: 0 },
++  );
++});
++
++test('a shared budget counts attempts and resets at the window', () => {
++  let now = 100;
++  const budget = createStreetViewBudget({
++    now: () => now,
++    maxRequests: 2,
++    windowMs: 1000,
++  });
++  assert.equal(budget.consume(), true);
++  assert.equal(budget.consume(), true);
++  assert.equal(budget.consume(), false);
++  now = 1099;
++  assert.equal(budget.consume(), false);
++  now = 1100;
++  assert.equal(budget.consume(), true);
++  now = 0;
++  assert.equal(budget.consume(), true);
++});
++
++test('invalid budget settings fail closed', () => {
++  assert.throws(() => createStreetViewBudget({ maxRequests: 0 }), TypeError);
++  assert.throws(() => createStreetViewBudget({ windowMs: 0 }), TypeError);
++});
++
++test('frame route pins location and caps billable requests', async (t) => {
++  const names = [
++    'CCTV_SOURCES_JSON',
++    'CCTV_SOURCES_FILE',
++    'CCTV_FORCE_AUSTIN',
++    'GOOGLE_MAPS_SERVER_API_KEY',
++  ];
++  const before = Object.fromEntries(
++    names.map((name) => [name, process.env[name]]),
++  );
++  process.env.CCTV_SOURCES_JSON = JSON.stringify([
++    {
++      id: 'camera-fixture',
++      name: 'Fixture camera',
++      lat: 30.2672,
++      lon: -97.7431,
++      feedType: 'image',
++    },
++  ]);
++  process.env.CCTV_SOURCES_FILE = 'not-a-real-cctv-source.json';
++  process.env.CCTV_FORCE_AUSTIN = '0';
++  process.env.GOOGLE_MAPS_SERVER_API_KEY = 'test-only-street-view-key';
++
++  const originalFetch = globalThis.fetch;
++  const streetViewCalls = [];
++  globalThis.fetch = async (url) => {
++    const target = new URL(String(url));
++    if (
++      target.hostname === 'maps.googleapis.com' &&
++      target.pathname === '/maps/api/streetview'
++    ) {
++      streetViewCalls.push(target);
++      return new Response(Buffer.from('fake-jpeg'), {
++        headers: { 'content-type': 'image/jpeg' },
++      });
++    }
++    return new Response('not found', { status: 404 });
++  };
++  t.after(() => {
++    globalThis.fetch = originalFetch;
++    for (const name of names) {
++      if (before[name] === undefined) delete process.env[name];
++      else process.env[name] = before[name];
++    }
++  });
++
++  let handler;
++  cctvProxy().configureServer({
++    middlewares: {
++      use: (_route, middleware) => {
++        handler = middleware;
++      },
++    },
++  });
++  const frame = (id, query = '') =>
++    new Promise((resolve, reject) => {
++      let source = null;
++      const response = {
++        writeHead(_status, headers) {
++          source = headers['X-CCTV-Source'];
++        },
++        end() {
++          resolve(source);
++        },
++      };
++      const request = {
++        url: `/frame/${id}${query}`,
++        method: 'GET',
++        headers: {},
++        socket: { remoteAddress: '127.0.0.1' },
++        on() {},
++      };
++      Promise.resolve(handler(request, response)).catch(reject);
++    });
++
++  assert.equal(await frame('unknown', '?lat=48.8584&lon=2.2945'), 'synthetic');
++  assert.equal(streetViewCalls.length, 0);
++  assert.equal(
++    await frame('camera-fixture', '?lat=48.8584&lon=2.2945'),
++    'streetview',
++  );
++  assert.equal(streetViewCalls.length, 1);
++  assert.equal(
++    streetViewCalls[0].searchParams.get('location'),
++    '30.2672,-97.7431',
++  );
++
++  for (let i = 1; i < STREET_VIEW_MAX_REQUESTS; i += 1) {
++    assert.equal(await frame('camera-fixture'), 'streetview');
++  }
++  assert.equal(await frame('camera-fixture'), 'synthetic');
++  assert.equal(streetViewCalls.length, STREET_VIEW_MAX_REQUESTS);
++});

@@ -1,0 +1,47 @@
+5540b3a7d52907493511e92a3d1a5fcc610ef588
+SECURITY.md
+scripts/format-scope.json
+scripts/package-boundaries.json
+src/i18n/locales/ar.json
+src/i18n/locales/de.json
+src/i18n/locales/fr.json
+src/i18n/locales/it.json
+src/i18n/locales/ja.json
+src/i18n/locales/pt.json
+src/i18n/locales/uk.json
+src/i18n/locales/zh-Hant.json
+
+Auto-merging .env.example
+Auto-merging DATA_SOURCES.md
+Auto-merging README.md
+Auto-merging SECURITY.md
+CONFLICT (content): Merge conflict in SECURITY.md
+Auto-merging build/vite.js
+Auto-merging docs/CURRENT-STATE.md
+Auto-merging scripts/format-scope.json
+CONFLICT (content): Merge conflict in scripts/format-scope.json
+Auto-merging scripts/package-boundaries.json
+CONFLICT (content): Merge conflict in scripts/package-boundaries.json
+Auto-merging server/providers/cctv.js
+Auto-merging server/providers/cctv/normalize.js
+Auto-merging src/data/dataCredits.js
+Auto-merging src/i18n/locales/ar.json
+CONFLICT (content): Merge conflict in src/i18n/locales/ar.json
+Auto-merging src/i18n/locales/de.json
+CONFLICT (content): Merge conflict in src/i18n/locales/de.json
+Auto-merging src/i18n/locales/es.json
+Auto-merging src/i18n/locales/fr.json
+CONFLICT (content): Merge conflict in src/i18n/locales/fr.json
+Auto-merging src/i18n/locales/it.json
+CONFLICT (content): Merge conflict in src/i18n/locales/it.json
+Auto-merging src/i18n/locales/ja.json
+CONFLICT (content): Merge conflict in src/i18n/locales/ja.json
+Auto-merging src/i18n/locales/pt.json
+CONFLICT (content): Merge conflict in src/i18n/locales/pt.json
+Auto-merging src/i18n/locales/ru.json
+Auto-merging src/i18n/locales/uk.json
+CONFLICT (content): Merge conflict in src/i18n/locales/uk.json
+Auto-merging src/i18n/locales/zh-CN.json
+Auto-merging src/i18n/locales/zh-Hant.json
+CONFLICT (content): Merge conflict in src/i18n/locales/zh-Hant.json
+Auto-merging src/tooling/viteBuild.test.mjs

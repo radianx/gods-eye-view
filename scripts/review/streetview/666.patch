@@ -1,0 +1,905 @@
+diff --git a/server/providers/cctv.js b/server/providers/cctv.js
+index a977f4e7..02a120ce 100644
+--- a/server/providers/cctv.js
++++ b/server/providers/cctv.js
+@@ -18,7 +18,14 @@ import { sanitizeCctvRangeHeader } from './cctv/range.js';
+ import { admitSameSiteKeyless } from './common/same-site.js';
+ import { PROXY_SIGNALS } from '../../src/localRequestGate.mjs';
+ import { createHlsPuller } from './cctv/stream.js';
+-import { googleServerApiKey } from './places/google-key.js';
++import {
++  createStreetViewFrameCache,
++  resolveStreetViewTarget,
++  streetViewCacheKey,
++  streetViewPose,
++} from './cctv/streetview.js';
++import { clientKey } from './common/rate-limit.js';
++import { googleRateLimiter, googleServerApiKey } from './places/google-key.js';
+ export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
+ /**
+  * Vite plugin: CCTV camera proxy with source registry, frame/media serving,
+@@ -35,6 +42,9 @@ export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
+  */
+ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+   const getCctvSources = createCctvCatalog({ sourceRoot });
++  // Held per plugin instance rather than per module so the frames belong to
++  // the server that is actually serving, the way the catalog above does.
++  const streetViewFrames = createStreetViewFrameCache();
+   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
+   const health = new Map();
+   /** Cap on health map entries to prevent unbounded growth. Sized to the
+@@ -96,18 +106,11 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+       const sv = new URL('https://maps.googleapis.com/maps/api/streetview');
+       sv.searchParams.set('size', '960x540');
+       sv.searchParams.set('location', `${lat},${lon}`);
+-      sv.searchParams.set(
+-        'heading',
+-        String(Number.isFinite(heading) ? heading : 0),
+-      );
+-      sv.searchParams.set(
+-        'fov',
+-        String(Number.isFinite(fov) ? Math.max(20, Math.min(120, fov)) : 80),
+-      );
+-      sv.searchParams.set(
+-        'pitch',
+-        String(Number.isFinite(pitch) ? Math.max(-40, Math.min(20, pitch)) : 0),
+-      );
++      // Already clamped (fov, pitch) and wrapped (heading) by
++      // `streetViewPose`, which is also what the frame cache keys on.
++      sv.searchParams.set('heading', String(heading));
++      sv.searchParams.set('fov', String(fov));
++      sv.searchParams.set('pitch', String(pitch));
+       sv.searchParams.set('source', 'outdoor');
+       sv.searchParams.set('return_error_code', 'true');
+       sv.searchParams.set('key', streetViewKey);
+@@ -509,8 +512,10 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+         const source = sourceById.get(cameraId);
+         const label = url.searchParams.get('label') || source?.name || cameraId;
+         const city = url.searchParams.get('city') || source?.city || '';
+-        const lat = Number(url.searchParams.get('lat') || source?.lat);
+-        const lon = Number(url.searchParams.get('lon') || source?.lon);
++        // `lat`/`lon` are still sent by the browser on every frame, but they
++        // are no longer read: the registered pose in `source` is the only
++        // thing a billable Street View lookup is aimed at. See
++        // `resolveStreetViewTarget`.
+         const heading = Number(
+           url.searchParams.get('heading') || source?.headingDeg,
+         );
+@@ -545,22 +550,45 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+           return;
+         }
+ 
+-        // The Street View fallback spends the Google key, so a forwarded
+-        // request (whose client this server cannot see) gets the placeholder,
+-        // as if no key were configured. Any forwarding header counts, even an
+-        // empty one.
++        // Street View is the only metered step in this chain, so a frame
++        // reaches it for a camera the catalog actually serves, at the pose
++        // that catalog recorded, and only within the per-IP Google budget it
++        // shares with the Places and geocoding routes. A refusal is not
++        // something the viewer can act on, and the synthetic card
++        // below is already this route's answer for "no frame available", so a
++        // refused lookup takes that same exit rather than breaking the <img>
++        // element with a 429 the page has no way to render.
++        //
++        // A frame already bought for this exact camera and pose is served
++        // from memory first, before the Google budget is consulted: the 10 s
++        // card refresh would otherwise buy the same still every time, and a
++        // cached answer costs nothing, so it does not spend the viewer's
++        // allowance.
++        //
++        // Both wait on a configured key: removing the key is how an operator
++        // turns Street View off, so it switches off the cached frames too,
++        // and a keyless request has nothing to spend that budget on.
++        // A forwarded request (whose client this server cannot see) gets the
++        // placeholder, as if no key were configured: no cached frame and no
++        // Google spend. Any forwarding header counts, even an empty one.
+         const forwarded = PROXY_SIGNALS.some(
+           (name) => req.headers?.[name] !== undefined,
+         );
+-        const sv = forwarded
++        const streetViewTarget = forwarded
+           ? null
+-          : await streetViewFallback({
+-              lat,
+-              lon,
+-              heading,
+-              fov,
+-              pitch,
+-            });
++          : resolveStreetViewTarget(source);
++        let sv = null;
++        if (streetViewTarget && googleServerApiKey()) {
++          const pose = streetViewPose({ heading, fov, pitch });
++          const cacheKey = streetViewCacheKey(cameraId, streetViewTarget, pose);
++          sv = streetViewFrames.get(cacheKey);
++          // Null only for the explicit GEV_RATELIMIT_GOOGLE_PER_MIN=0 opt-out.
++          const allowGoogle = googleRateLimiter();
++          if (!sv && (!allowGoogle || allowGoogle(clientKey(req)))) {
++            sv = await streetViewFallback({ ...streetViewTarget, ...pose });
++            if (sv?.ok) streetViewFrames.set(cacheKey, sv);
++          }
++        }
+         if (sv?.ok) {
+           setHealth(cameraId, {
+             status: 'degraded',
+diff --git a/server/providers/cctv/streetview.js b/server/providers/cctv/streetview.js
+new file mode 100644
+index 00000000..0a2b90d6
+--- /dev/null
++++ b/server/providers/cctv/streetview.js
+@@ -0,0 +1,198 @@
++// ---------------------------------------------------------------------------
++// Street View fallback admission
++// ---------------------------------------------------------------------------
++// `/api/cctv/frame/:id` degrades upstream snapshot -> Street View -> synthetic
++// SVG. Only the middle step leaves the machine on a metered account: Street
++// View Static bills the operator's own Google key per image. Everything else
++// this proxy does is free, so this is the one branch where an unauthenticated
++// request costs the operator money. It is admitted by the same per-IP Google
++// budget as the Places and geocoding routes (`googleRateLimiter` in
++// `places/google-key.js`, GEV_RATELIMIT_GOOGLE_PER_MIN), because it spends the
++// same key; this module decides what a lookup may be aimed at and caches what
++// it bought.
++
++/**
++ * Wrap a bearing into [0, 360).
++ *
++ * Street View reads `heading` as a compass bearing, and a bearing is periodic:
++ * the right answer for 400 is 40, and for -90 it is 270, so this wraps where
++ * `fov` and `pitch` clamp. A non-finite bearing has no sensible wrap and
++ * becomes 0, which is what the route already did.
++ *
++ * @param {unknown} value
++ * @returns {number}
++ */
++export function normalizeHeadingDeg(value) {
++  const num = Number(value);
++  if (!Number.isFinite(num)) return 0;
++  return ((num % 360) + 360) % 360;
++}
++
++/**
++ * Read one coordinate, treating "absent" as absent rather than as zero.
++ *
++ * `Number(null)` and `Number('')` are both `0`, so a catalog row that simply
++ * has no position would otherwise resolve to a perfectly finite point in the
++ * Gulf of Guinea and buy a Street View frame of the ocean. Sources are parsed
++ * from CSV and JSON feeds, so a numeric string is still accepted.
++ *
++ * @param {unknown} value
++ * @returns {number|null}
++ */
++function coordinate(value) {
++  if (typeof value !== 'number' && typeof value !== 'string') return null;
++  if (typeof value === 'string' && value.trim() === '') return null;
++  const num = Number(value);
++  return Number.isFinite(num) ? num : null;
++}
++
++/**
++ * Resolve the coordinates a Street View fallback may be fetched for, or null
++ * when the request must not reach Google at all.
++ *
++ * The frame route accepts `lat`/`lon` on the query string, and the browser
++ * sends them on every frame: `frameUrlFor` in `src/layers/cctv/source.js`
++ * copies them off the camera record it got from `/api/cctv/sources`. They are
++ * therefore always a restatement of what the server already holds, which is
++ * what makes them safe to stop honouring — the registered pose is used
++ * instead, so a hand-written query cannot point a billable lookup at an
++ * address of its choosing. The pose angles stay client-supplied because those
++ * are a genuine refinement (`frames.js` sends a default pitch where the
++ * catalog has none) and they only aim a lookup that is already paid for.
++ *
++ * An unregistered camera id resolves to nothing, so an id the catalog never
++ * served cannot spend a lookup either.
++ *
++ * @param {{lat?:unknown, lon?:unknown}|undefined|null} source - Registered camera record.
++ * @returns {{lat:number, lon:number}|null} Billable target, or null to refuse.
++ */
++export function resolveStreetViewTarget(source) {
++  if (!source) return null;
++  const lat = coordinate(source.lat);
++  const lon = coordinate(source.lon);
++  if (lat === null || lon === null) return null;
++  // A finite number is not a coordinate. Google answers 400 for an off-globe
++  // location, but the request has already been made by then, so the bound is
++  // checked here instead of being discovered upstream.
++  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
++  return { lat, lon };
++}
++
++// ---------------------------------------------------------------------------
++// Street View frame cache
++// ---------------------------------------------------------------------------
++// An active card re-requests its frame every ACTIVE_FRAME_REFRESH_MS (10s),
++// and the `ts` parameter that makes each refresh a new URL is only there to
++// beat the browser cache. For a camera on the Street View fallback every one
++// of those refreshes asks Google for the same still of the same place, and
++// Street View imagery does not change on that timescale, so each repeat is a
++// billed lookup that buys nothing.
++
++/**
++ * How long a fetched Street View frame is reused.
++ *
++ * Thirty refreshes of one card, and short enough that a camera whose own
++ * upstream recovers is not the reason anyone waits: the cache only answers
++ * after that upstream has already been tried and has failed.
++ */
++export const STREET_VIEW_CACHE_MS = 5 * 60_000;
++
++/**
++ * Frames kept at once. Four times the 16-card ambient drain
++ * (CCTV_AMBIENT_CARD_DRAIN_CAP), so panning between a few clusters does not
++ * evict the cards still on screen. A 960x540 JPEG is on the order of 100 KiB,
++ * which keeps the whole cache to a few MiB of process memory.
++ */
++export const STREET_VIEW_CACHE_MAX_ENTRIES = 64;
++
++/**
++ * The fov/pitch/heading actually sent to Google, from what the route read.
++ *
++ * fov and pitch are clamped to what Street View accepts; heading wraps
++ * instead, because a bearing is periodic — 400 is 40, not "too far north".
++ * The wrap is on the ordinary path, not only for hand-written queries: the
++ * browser sends Math.round(headingDeg) (`frameUrlFor`), so a catalog bearing
++ * of 359.6 arrives as 360. Missing values take the defaults the route has
++ * always used.
++ *
++ * @param {{heading?:unknown, fov?:unknown, pitch?:unknown}} pose
++ * @returns {{heading:number, fov:number, pitch:number}}
++ */
++export function streetViewPose({ heading, fov, pitch }) {
++  const fovNum = Number(fov);
++  const pitchNum = Number(pitch);
++  return {
++    heading: normalizeHeadingDeg(heading),
++    fov: Number.isFinite(fovNum) ? Math.max(20, Math.min(120, fovNum)) : 80,
++    pitch: Number.isFinite(pitchNum)
++      ? Math.max(-40, Math.min(20, pitchNum))
++      : 0,
++  };
++}
++
++/**
++ * Cache key for one billable lookup: the camera and every parameter that
++ * changes the image Google returns. Two requests with the same key would buy
++ * the same picture.
++ *
++ * @param {string} cameraId
++ * @param {{lat:number, lon:number}} target - From `resolveStreetViewTarget`.
++ * @param {{heading:number, fov:number, pitch:number}} pose - From `streetViewPose`.
++ * @returns {string}
++ */
++export function streetViewCacheKey(cameraId, target, pose) {
++  return [
++    cameraId,
++    target.lat,
++    target.lon,
++    pose.heading,
++    pose.fov,
++    pose.pitch,
++  ].join('|');
++}
++
++/**
++ * Bounded, in-memory store of fetched Street View frames.
++ *
++ * Same shape as the route and Overpass caches in this tree: a Map holding the
++ * value with its `cachedAt`, an age check on read, and oldest-first eviction
++ * once it is over size. Memory only, so a restart starts empty and nothing
++ * Google returned is ever written to disk. Only a successful image is stored;
++ * a miss or an upstream error is tried again on the next refresh.
++ *
++ * @param {object} [options]
++ * @param {number} [options.ttlMs]
++ * @param {number} [options.maxEntries]
++ * @param {() => number} [options.now]
++ * @returns {{get:(key:string)=>object|null, set:(key:string, frame:object)=>void, readonly size:number}}
++ */
++export function createStreetViewFrameCache({
++  ttlMs = STREET_VIEW_CACHE_MS,
++  maxEntries = STREET_VIEW_CACHE_MAX_ENTRIES,
++  now = Date.now,
++} = {}) {
++  /** @type {Map<string,{frame:object, cachedAt:number}>} */
++  const entries = new Map();
++  return {
++    get(key) {
++      const hit = entries.get(key);
++      if (!hit) return null;
++      if (now() - hit.cachedAt > ttlMs) {
++        entries.delete(key);
++        return null;
++      }
++      return hit.frame;
++    },
++    set(key, frame) {
++      // Re-inserting moves the key to the back, so eviction drops the frame
++      // fetched longest ago rather than one just refreshed.
++      entries.delete(key);
++      entries.set(key, { frame, cachedAt: now() });
++      while (entries.size > maxEntries)
++        entries.delete(entries.keys().next().value);
++    },
++    get size() {
++      return entries.size;
++    },
++  };
++}
+diff --git a/server/providers/places/google-key.js b/server/providers/places/google-key.js
+index ff5fe635..68caca26 100644
+--- a/server/providers/places/google-key.js
++++ b/server/providers/places/google-key.js
+@@ -1,4 +1,42 @@
+ import { resolveGoogleServerKey } from '../../../scripts/google-server-key.mjs';
++import { makeCostRateLimiter } from '../common/rate-limit.js';
++
++// Construct lazily after the standalone environment has loaded.
++// undefined = not built yet; null = the explicit 0 opt-out; fn = active limiter
++let _googleRateLimiter;
++
++/**
++ * Requests/min/IP applied when GEV_RATELIMIT_GOOGLE_PER_MIN is unset. This is
++ * the value the Pinokio build already ships (pinokio/_ENVIRONMENT), so the
++ * packaged app keeps behaving exactly as it does today and only an
++ * unconfigured server changes — from unlimited to what the product already
++ * runs with. Places calls are user-driven (a search, a nearby lookup, an
++ * installation probe) rather than polled. The CCTV Street View fallback is
++ * polled, but its frames are cached per camera and pose, so a card refreshing
++ * every 10 seconds reaches this limiter once per cache lifetime rather than
++ * six times a minute. Both therefore sit far below this cap, which bites only
++ * a caller enumerating an endpoint. `.env.example` suggests a tighter 60 when
++ * the host is not localhost; that still applies.
++ */
++export const GOOGLE_DEFAULT_PER_MIN = 120;
++
++/**
++ * The one per-IP budget for every server-side call billed to the Google key
++ * below: nearby-places, text-search, geocoding and the CCTV Street View
++ * fallback. They share one limiter because they share one key and one bill,
++ * so GEV_RATELIMIT_GOOGLE_PER_MIN bounds what a client can spend on it in
++ * total rather than per route. Null only when that variable is set to 0.
++ *
++ * @returns {((key:string)=>boolean)|null}
++ */
++export function googleRateLimiter() {
++  if (_googleRateLimiter === undefined)
++    _googleRateLimiter = makeCostRateLimiter(
++      process.env.GEV_RATELIMIT_GOOGLE_PER_MIN,
++      GOOGLE_DEFAULT_PER_MIN,
++    );
++  return _googleRateLimiter;
++}
+ 
+ /**
+  * Optional Google place context is an empty capability when no key is present,
+diff --git a/server/providers/places/google.js b/server/providers/places/google.js
+index 1ddaa959..6e8344cd 100644
+--- a/server/providers/places/google.js
++++ b/server/providers/places/google.js
+@@ -1,9 +1,10 @@
+ import {
++  googleRateLimiter,
+   googleServerApiKey,
+   keylessGooglePlacesResponse,
+   keylessGoogleGeocodeResponse,
+ } from './google-key.js';
+-import { makeCostRateLimiter, clientKey } from '../common/rate-limit.js';
++import { clientKey } from '../common/rate-limit.js';
+ import { admitSameSite } from '../common/same-site.js';
+ import { readResponseJsonCapped } from '../common/http.js';
+ import {
+@@ -11,31 +12,7 @@ import {
+   projectTextSearchPlaces,
+ } from '../../../src/data/placeProviderPayloads.js';
+ 
+-// Construct lazily after the standalone environment has loaded.
+-// undefined = not built yet; null = the explicit 0 opt-out; fn = active limiter
+-let _googleRateLimiter;
+-
+-/**
+- * Requests/min/IP applied when GEV_RATELIMIT_GOOGLE_PER_MIN is unset. This is
+- * the value the Pinokio build already ships (pinokio/_ENVIRONMENT), so the
+- * packaged app keeps behaving exactly as it does today and only an
+- * unconfigured server changes — from unlimited to what the product already
+- * runs with. Places calls are user-driven (a search, a nearby lookup, an
+- * installation probe) rather than polled, so this sits far above what the app
+- * generates and bites only a caller enumerating the endpoint. `.env.example`
+- * suggests a tighter 60 when the host is not localhost; that still applies.
+- */
+-export const GOOGLE_DEFAULT_PER_MIN = 120;
+-
+-/** Google cost endpoints (nearby-places, text-search, geocoding). Null only when set to 0. */
+-function googleRateLimiter() {
+-  if (_googleRateLimiter === undefined)
+-    _googleRateLimiter = makeCostRateLimiter(
+-      process.env.GEV_RATELIMIT_GOOGLE_PER_MIN,
+-      GOOGLE_DEFAULT_PER_MIN,
+-    );
+-  return _googleRateLimiter;
+-}
++export { GOOGLE_DEFAULT_PER_MIN } from './google-key.js';
+ 
+ /** Validate raw lat/lon presence and WGS84 bounds before consuming request quota. */
+ export function validatePlacesCoordinates(searchParams) {
+diff --git a/src/data/cctvStreetViewGoogleBudget.test.mjs b/src/data/cctvStreetViewGoogleBudget.test.mjs
+new file mode 100644
+index 00000000..0a8352e0
+--- /dev/null
++++ b/src/data/cctvStreetViewGoogleBudget.test.mjs
+@@ -0,0 +1,140 @@
++// The CCTV Street View fallback bills the same Google key as Places search and
++// geocoding, so it is admitted by the same per-IP budget,
++// GEV_RATELIMIT_GOOGLE_PER_MIN, rather than by a limiter of its own that the
++// operator cannot tune. The budget is built once per process on first use, so
++// this file sets its cap before anything runs and keeps to one scenario.
++//
++// Run with: npm test   (node --test)
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { Readable } from 'node:stream';
++import { cctvProxy } from '../../server/providers/cctv.js';
++import { googlePlacesContextProxy } from '../../server/providers/places/google.js';
++
++process.env.GEV_RATELIMIT_GOOGLE_PER_MIN = '2';
++
++const CLIENT = '10.0.0.9';
++const CAMERA = {
++  id: 'budget-fixture',
++  name: 'Budget fixture',
++  lat: 30.2672,
++  lon: -97.7431,
++  feedType: 'image',
++};
++
++/** Mount the CCTV route over one camera with no upstream of its own. */
++function mountCctv(t) {
++  const names = [
++    'CCTV_SOURCES_JSON',
++    'CCTV_SOURCES_FILE',
++    'CCTV_FORCE_AUSTIN',
++    'GOOGLE_MAPS_SERVER_API_KEY',
++  ];
++  const before = Object.fromEntries(
++    names.map((name) => [name, process.env[name]]),
++  );
++  process.env.CCTV_SOURCES_JSON = JSON.stringify([CAMERA]);
++  process.env.CCTV_SOURCES_FILE = 'absent-source-file.json';
++  process.env.CCTV_FORCE_AUSTIN = '0';
++  process.env.GOOGLE_MAPS_SERVER_API_KEY = 'fixture-street-view-key';
++  const nativeFetch = globalThis.fetch;
++  const lookups = [];
++  globalThis.fetch = async (url) => {
++    lookups.push(String(url));
++    return new Response(Buffer.from('jpeg-bytes'), {
++      headers: { 'content-type': 'image/jpeg' },
++    });
++  };
++  t.after(() => {
++    globalThis.fetch = nativeFetch;
++    for (const name of names) {
++      if (before[name] === undefined) delete process.env[name];
++      else process.env[name] = before[name];
++    }
++  });
++  let handler = null;
++  cctvProxy().configureServer({
++    middlewares: {
++      use: (_route, fn) => {
++        handler = fn;
++      },
++    },
++  });
++  const frame = (heading) =>
++    new Promise((resolve) => {
++      const res = {
++        headers: {},
++        writeHead(_status, headers) {
++          res.headers = headers || {};
++        },
++        end() {
++          resolve(res.headers['X-CCTV-Source']);
++        },
++      };
++      handler(
++        {
++          url: `/frame/${CAMERA.id}?heading=${heading}`,
++          method: 'GET',
++          headers: {},
++          socket: { remoteAddress: CLIENT },
++          on() {},
++        },
++        res,
++      );
++    });
++  return { frame, lookups };
++}
++
++/** Mount the nearby-places route and return a function that calls it. */
++function mountPlaces() {
++  const routes = new Map();
++  googlePlacesContextProxy({
++    resolveApiKey: () => 'fixture-google-server-key',
++    fetchImpl: async () => Response.json({ places: [] }),
++  }).configureServer({
++    middlewares: { use: (route, fn) => routes.set(route, fn) },
++  });
++  const handler = routes.get('/api/google/nearby-places');
++  return () =>
++    new Promise((resolve, reject) => {
++      const req = Readable.from([]);
++      Object.assign(req, {
++        method: 'GET',
++        url: '/?lat=30.2672&lon=-97.7431',
++        headers: { host: 'localhost:4173' },
++        socket: { remoteAddress: CLIENT },
++      });
++      const res = {
++        statusCode: 200,
++        setHeader() {},
++        end() {
++          resolve(res.statusCode);
++        },
++      };
++      Promise.resolve(handler(req, res)).catch(reject);
++    });
++}
++
++test('Street View and Places spend one Google budget per client', async (t) => {
++  const cctv = mountCctv(t);
++  const nearby = mountPlaces();
++
++  assert.equal(await nearby(), 200, 'the first Google call is admitted');
++  assert.equal(await cctv.frame(90), 'streetview', 'so is the second');
++  // The budget of 2 is now spent by the two routes together.
++  assert.equal(
++    await cctv.frame(180),
++    'synthetic',
++    'a new pose past the shared budget is refused before Google',
++  );
++  assert.equal(
++    await nearby(),
++    429,
++    'and Places sees the same exhausted budget',
++  );
++  assert.equal(cctv.lookups.length, 1, 'only the admitted lookup was made');
++
++  // A cached pose costs nothing, so it is still served with the budget spent.
++  assert.equal(await cctv.frame(90), 'streetview');
++  assert.equal(cctv.lookups.length, 1);
++});
+diff --git a/src/data/cctvStreetViewQuota.test.mjs b/src/data/cctvStreetViewQuota.test.mjs
+new file mode 100644
+index 00000000..effe8799
+--- /dev/null
++++ b/src/data/cctvStreetViewQuota.test.mjs
+@@ -0,0 +1,146 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import {
++  STREET_VIEW_CACHE_MAX_ENTRIES,
++  STREET_VIEW_CACHE_MS,
++  createStreetViewFrameCache,
++  normalizeHeadingDeg,
++  resolveStreetViewTarget,
++  streetViewCacheKey,
++  streetViewPose,
++} from '../../server/providers/cctv/streetview.js';
++import { GOOGLE_DEFAULT_PER_MIN } from '../../server/providers/places/google-key.js';
++
++test('an unregistered camera id cannot spend a Street View lookup', () => {
++  assert.equal(resolveStreetViewTarget(undefined), null);
++  assert.equal(resolveStreetViewTarget(null), null);
++});
++
++test('a registered camera resolves to its own recorded pose', () => {
++  assert.deepEqual(resolveStreetViewTarget({ lat: 30.2672, lon: -97.7431 }), {
++    lat: 30.2672,
++    lon: -97.7431,
++  });
++});
++
++test('client-supplied coordinates cannot steer a billable lookup', () => {
++  // The browser sends lat/lon on every frame; the resolver is handed the
++  // registered record, so whatever arrived on the query string is not part of
++  // the decision at all. A source carrying an attacker's target only resolves
++  // when the catalog itself holds it.
++  const registered = { lat: 30.2672, lon: -97.7431, id: 'austin-1' };
++  const target = resolveStreetViewTarget(registered);
++  assert.deepEqual(target, { lat: 30.2672, lon: -97.7431 });
++});
++
++test('a finite number that is not a coordinate is refused before Google sees it', () => {
++  for (const bad of [
++    { lat: 91, lon: 0 },
++    { lat: -91, lon: 0 },
++    { lat: 0, lon: 181 },
++    { lat: 0, lon: -181 },
++  ]) {
++    assert.equal(resolveStreetViewTarget(bad), null, JSON.stringify(bad));
++  }
++});
++
++test('a camera with no usable pose is refused rather than guessed at', () => {
++  for (const bad of [
++    { lat: undefined, lon: 0 },
++    { lat: 0, lon: null },
++    { lat: Number.NaN, lon: 0 },
++    { lat: 'thirty', lon: 0 },
++    { lat: Number.POSITIVE_INFINITY, lon: 0 },
++  ]) {
++    assert.equal(resolveStreetViewTarget(bad), null, JSON.stringify(bad));
++  }
++});
++
++test('a bearing wraps instead of clamping, because a bearing is periodic', () => {
++  assert.equal(normalizeHeadingDeg(40), 40);
++  assert.equal(normalizeHeadingDeg(400), 40);
++  assert.equal(normalizeHeadingDeg(-90), 270);
++  assert.equal(normalizeHeadingDeg(360), 0);
++  assert.equal(normalizeHeadingDeg(-720.5), 359.5);
++});
++
++test('an unreadable bearing becomes due north rather than reaching Google', () => {
++  for (const bad of [undefined, null, Number.NaN, 'north', {}, Infinity]) {
++    assert.equal(normalizeHeadingDeg(bad), 0, String(bad));
++  }
++});
++
++test('the shared Google budget clears the demand the CCTV layer generates', () => {
++  // 16 ambient cards (CCTV_AMBIENT_CARD_DRAIN_CAP) refreshing every 10s
++  // (ACTIVE_FRAME_REFRESH_MS) is 96 fallback frames a minute for one viewer
++  // whose cameras have all lost their upstreams. With the frame cache only the
++  // first refresh of each pose is a lookup, so the steady state is 16 lookups
++  // per cache lifetime. Either figure must sit under the default Google cap,
++  // or normal use of the layer would starve Places search on the same budget.
++  const uncachedPerMinute = 16 * (60_000 / 10_000);
++  const cachedPerMinute = 16 * (60_000 / STREET_VIEW_CACHE_MS);
++  assert.equal(uncachedPerMinute, 96);
++  assert.ok(uncachedPerMinute < GOOGLE_DEFAULT_PER_MIN);
++  assert.ok(cachedPerMinute <= 4, `${cachedPerMinute} lookups/min`);
++});
++
++test('the pose sent to Google is clamped and wrapped, with the route defaults', () => {
++  assert.deepEqual(streetViewPose({ heading: 360, fov: 200, pitch: -90 }), {
++    heading: 0,
++    fov: 120,
++    pitch: -40,
++  });
++  assert.deepEqual(streetViewPose({ heading: NaN, fov: NaN, pitch: NaN }), {
++    heading: 0,
++    fov: 80,
++    pitch: 0,
++  });
++});
++
++test('a cache key changes with every parameter that changes the image', () => {
++  const target = { lat: 30.2672, lon: -97.7431 };
++  const pose = { heading: 90, fov: 80, pitch: 0 };
++  const base = streetViewCacheKey('cam-1', target, pose);
++  assert.equal(base, streetViewCacheKey('cam-1', { ...target }, { ...pose }));
++  for (const [cameraId, t, p] of [
++    ['cam-2', target, pose],
++    ['cam-1', { ...target, lat: 30.2673 }, pose],
++    ['cam-1', target, { ...pose, heading: 91 }],
++    ['cam-1', target, { ...pose, fov: 81 }],
++    ['cam-1', target, { ...pose, pitch: -1 }],
++  ]) {
++    assert.notEqual(streetViewCacheKey(cameraId, t, p), base);
++  }
++});
++
++test('a cached frame is reused inside its TTL and dropped after it', () => {
++  let clock = 1_000_000;
++  const cache = createStreetViewFrameCache({ now: () => clock });
++  const frame = {
++    ok: true,
++    body: Buffer.from('jpeg'),
++    contentType: 'image/jpeg',
++  };
++  assert.equal(cache.get('k'), null);
++  cache.set('k', frame);
++  clock += STREET_VIEW_CACHE_MS;
++  assert.equal(cache.get('k'), frame, 'still fresh at exactly the TTL');
++  clock += 1;
++  assert.equal(cache.get('k'), null, 'expired one millisecond later');
++  assert.equal(cache.size, 0, 'an expired entry is removed, not kept');
++});
++
++test('the frame cache stays bounded and evicts the oldest frame first', () => {
++  const cache = createStreetViewFrameCache();
++  for (let i = 0; i < STREET_VIEW_CACHE_MAX_ENTRIES + 10; i += 1)
++    cache.set(`k${i}`, { ok: true, i });
++  assert.equal(cache.size, STREET_VIEW_CACHE_MAX_ENTRIES);
++  assert.equal(cache.get('k0'), null);
++  assert.equal(cache.get('k9'), null);
++  assert.equal(cache.get('k10')?.i, 10);
++  // Refreshing an entry protects it from the next eviction.
++  cache.set('k10', { ok: true, i: 10 });
++  cache.set('fresh', { ok: true });
++  assert.equal(cache.get('k10')?.i, 10);
++  assert.equal(cache.get('k11'), null);
++});
+diff --git a/src/data/cctvStreetViewRoute.test.mjs b/src/data/cctvStreetViewRoute.test.mjs
+new file mode 100644
+index 00000000..a991b722
+--- /dev/null
++++ b/src/data/cctvStreetViewRoute.test.mjs
+@@ -0,0 +1,176 @@
++// /api/cctv/frame/:id falls back to a Google Street View still when a camera's
++// own upstream has no frame. That lookup is billed to the operator's key, so
++// the route aims it at the camera the catalog registered, never at whatever
++// lat/lon the request carries. These drive the real route end to end and read
++// the URL that would have gone to Google.
++//
++// Run with: npm test   (node --test)
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { cctvProxy } from '../../server/providers/cctv.js';
++import { GOOGLE_DEFAULT_PER_MIN } from '../../server/providers/places/google-key.js';
++
++// The Google budget is built once per process on first use; pin the default
++// so a value exported in the shell cannot change what these tests measure.
++delete process.env.GEV_RATELIMIT_GOOGLE_PER_MIN;
++
++// No snapshot and no still URL, so every frame request reaches Street View.
++const CAMERA = {
++  id: 'streetview-fixture',
++  name: 'Street View fixture',
++  city: 'Austin',
++  lat: 30.2672,
++  lon: -97.7431,
++  headingDeg: 90,
++  feedType: 'image',
++};
++
++const STREET_VIEW = 'https://maps.googleapis.com/maps/api/streetview';
++
++/** Collects what a handler wrote, the way a Node ServerResponse would. */
++function recordingResponse() {
++  const chunks = [];
++  let finished;
++  const done = new Promise((resolve) => {
++    finished = resolve;
++  });
++  const res = {
++    statusCode: 0,
++    headers: {},
++    body: Buffer.alloc(0),
++    writeHead(status, headers) {
++      res.statusCode = status;
++      res.headers = headers || {};
++    },
++    write(chunk) {
++      chunks.push(Buffer.from(chunk));
++      return true;
++    },
++    end(chunk) {
++      if (chunk) chunks.push(Buffer.from(chunk));
++      res.body = Buffer.concat(chunks);
++      finished();
++    },
++    on() {},
++    once() {},
++    emit() {},
++    destroy() {},
++  };
++  return { res, done };
++}
++
++/** Mount the real provider over the fixture camera with a server key set. */
++function mount(t) {
++  const names = [
++    'CCTV_SOURCES_JSON',
++    'CCTV_SOURCES_FILE',
++    'CCTV_FORCE_AUSTIN',
++    'GOOGLE_MAPS_SERVER_API_KEY',
++    'GOOGLE_MAPS_API_KEY',
++  ];
++  const before = Object.fromEntries(
++    names.map((name) => [name, process.env[name]]),
++  );
++  process.env.CCTV_SOURCES_JSON = JSON.stringify([CAMERA]);
++  process.env.CCTV_SOURCES_FILE = 'absent-source-file.json';
++  process.env.CCTV_FORCE_AUSTIN = '0';
++  process.env.GOOGLE_MAPS_SERVER_API_KEY = 'fixture-street-view-key';
++  delete process.env.GOOGLE_MAPS_API_KEY;
++
++  const nativeFetch = globalThis.fetch;
++  const streetView = [];
++  globalThis.fetch = async (url) => {
++    const target = new URL(String(url));
++    if (`${target.origin}${target.pathname}` !== STREET_VIEW)
++      throw new Error(`unexpected upstream request: ${target.origin}`);
++    streetView.push(target);
++    return new Response(Buffer.from('jpeg-bytes'), {
++      headers: { 'content-type': 'image/jpeg' },
++    });
++  };
++  t.after(() => {
++    globalThis.fetch = nativeFetch;
++    for (const name of names) {
++      if (before[name] === undefined) delete process.env[name];
++      else process.env[name] = before[name];
++    }
++  });
++
++  let handler = null;
++  cctvProxy().configureServer({
++    middlewares: {
++      use: (_route, fn) => {
++        handler = fn;
++      },
++    },
++  });
++  assert.ok(handler, 'the CCTV provider must mount a middleware');
++
++  const frame = async (path) => {
++    const { res, done } = recordingResponse();
++    await handler(
++      {
++        url: path,
++        headers: {},
++        method: 'GET',
++        socket: { remoteAddress: '10.0.0.7' },
++        on() {},
++      },
++      res,
++    );
++    await done;
++    return res;
++  };
++  return { frame, streetView };
++}
++
++test('lat/lon on the frame request do not move the Street View lookup', async (t) => {
++  const app = mount(t);
++  // What a hand-written query aimed at someone else's address would send.
++  const res = await app.frame(
++    `/frame/${CAMERA.id}?lat=48.858400&lon=2.294500&heading=90&ts=1`,
++  );
++  assert.equal(res.statusCode, 200);
++  assert.equal(res.headers['X-CCTV-Source'], 'streetview');
++  assert.equal(app.streetView.length, 1, 'one lookup reached Google');
++  assert.equal(
++    app.streetView[0].searchParams.get('location'),
++    `${CAMERA.lat},${CAMERA.lon}`,
++    'the lookup must be aimed at the registered camera, not the query string',
++  );
++});
++
++test('an unregistered camera id does not reach Google, whatever lat/lon it carries', async (t) => {
++  const app = mount(t);
++  const res = await app.frame(
++    '/frame/not-a-camera?lat=48.858400&lon=2.294500&heading=90&ts=1',
++  );
++  assert.equal(res.statusCode, 200);
++  assert.equal(res.headers['X-CCTV-Source'], 'synthetic');
++  assert.equal(app.streetView.length, 0);
++});
++
++test('the bearing the browser rounds up to 360 is sent to Google as 0', async (t) => {
++  const app = mount(t);
++  await app.frame(`/frame/${CAMERA.id}?heading=360&ts=1`);
++  assert.equal(app.streetView[0].searchParams.get('heading'), '0');
++});
++
++test('a card refresh at the same pose is served from cache, not bought again', async (t) => {
++  const app = mount(t);
++  // Each 10 s refresh carries a new `ts`; the picture it asks for does not
++  // change. Run past the per-client Google budget: a cached answer must not
++  // count against it, or a viewer on the fallback would be cut off by their own
++  // card refreshing.
++  for (let ts = 0; ts <= GOOGLE_DEFAULT_PER_MIN + 5; ts += 1) {
++    const res = await app.frame(`/frame/${CAMERA.id}?heading=90&ts=${ts}`);
++    assert.equal(res.headers['X-CCTV-Source'], 'streetview', `refresh ${ts}`);
++    assert.equal(res.body.toString(), 'jpeg-bytes');
++  }
++  assert.equal(app.streetView.length, 1, 'one lookup for one pose');
++
++  // A different pose is a different picture, so it is bought once as well.
++  await app.frame(`/frame/${CAMERA.id}?heading=180&ts=1`);
++  await app.frame(`/frame/${CAMERA.id}?heading=180&ts=2`);
++  assert.equal(app.streetView.length, 2);
++});

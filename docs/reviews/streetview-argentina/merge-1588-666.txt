@@ -1,0 +1,18 @@
+928489e06f9f32104b78ff1fd43731360c671dc0
+SECURITY.md
+build/vite.js
+server/providers/cctv.js
+src/tooling/viteBuild.test.mjs
+
+Auto-merging .env.example
+Auto-merging SECURITY.md
+CONFLICT (content): Merge conflict in SECURITY.md
+Auto-merging build/vite.js
+CONFLICT (content): Merge conflict in build/vite.js
+Auto-merging docs/CURRENT-STATE.md
+Auto-merging scripts/format-scope.json
+Auto-merging scripts/package-boundaries.json
+Auto-merging server/providers/cctv.js
+CONFLICT (content): Merge conflict in server/providers/cctv.js
+Auto-merging src/tooling/viteBuild.test.mjs
+CONFLICT (content): Merge conflict in src/tooling/viteBuild.test.mjs

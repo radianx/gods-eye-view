@@ -1,0 +1,77 @@
+{"policy":"1588","scenario":"outage","firstPaid":12,"firstServed":12,"refreshServed":0,"afterMinutePaid":24,"recovered":15}
+{"policy":"1588","scenario":"external","rejected":50,"fetches":0}
+{"policy":"1588","scenario":"fairness","firstClientCap":12,"secondClient":"synthetic","paid":12,"recoveredWhileExhausted":true}
+{"policy":"1588","scenario":"aggregate","paid":12}
+{"policy":"1588","scenario":"concurrentSameCamera","requests":10,"paid":10}
+{"policy":"1588","scenario":"pluginInstances","secondInstance":"streetview","paid":13}
+✔ actual catalog: 64 cameras, 25 external, 24 HLS, 15 stills (1.344893ms)
+✔ simultaneous still outage, refresh, reset, recovery (82.16505ms)
+✔ all external players reject frame/media requests before fetch (3.776127ms)
+✔ HLS stream routes and lease admission remain independent of Google (3.396454ms)
+✔ unknown IDs, query coordinates and forwarded requests cannot redirect spending (2.530841ms)
+✔ one client exhaustion and a second client: actual fairness (10.977741ms)
+✔ aggregate backstop with multiple clients is finite (6.77311ms)
+✔ failed Google attempts also consume quota (7.83289ms)
+✔ concurrent identical cache misses are not coalesced (6.101994ms)
+✔ two plugin instances: #1588 budget is per instance, #666 limiter is shared (12.050401ms)
+✔ registered cameras require valid geographic coordinates (1.386946ms)
+✔ a shared budget counts attempts and resets at the window (0.239965ms)
+✔ invalid budget settings fail closed (0.491449ms)
+✔ frame route pins location and caps billable requests (26.18443ms)
+✔ Peatonal Dufaur overrides the dedicated pack instead of duplicating its stream (1.01882ms)
+✔ Varitech stays in its separate opt-in pack, with historical receipts preserved (0.488384ms)
+✔ Argentina sources have unique public media and uncalibrated area anchors (2.424033ms)
+✔ Argentina types use supported URL contracts and normalize direct feeds unchanged (5.079609ms)
+✔ IPCamLive aliases follow only public snapshot redirects and never forward private headers (10.809441ms)
+✔ every active feed has a dated receipt and unavailable media stays out (1.768752ms)
+✔ survey dispositions preserve the original leads and resolve only active feeds (3.960941ms)
+✔ IPCamLive redirect exception still enforces raster MIME validation (5.936028ms)
+✔ fMP4 parsing keeps init and media on the registered origin (5.029974ms)
+✔ fMP4 cache bounds and leases cover init and media (15.081784ms)
+✔ eviction frees init files after their last segment leaves (4.893833ms)
+✔ encoder restart refetches init and retains old maps (8.759763ms)
+✔ upstream discontinuity refreshes a reused init URI (4.935445ms)
+✔ oversized or redirected init files never enter the cache (4.593689ms)
+✔ init plus media must fit the combined cache budget (0.796751ms)
+✔ shutdown aborts pending init downloads (6.381098ms)
+✔ MPEG-TS keeps its existing routes and media type (0.902518ms)
+✔ HD fMP4 combines live-edge startup, expired 404s, init refresh, eviction and rollback (1111.669175ms)
+✔ changing only the init URI restarts reused sequences and keeps old init ownership (4.086838ms)
+✔ fMP4 newest-pair 404s, init 404s and access failures remain strict (9.944411ms)
+✔ old media redirect, origin mismatch, TLS and size errors cannot become recoverable 404s (17.548254ms)
+✔ real fMP4 init and segment limits never expand the 24 MiB session budget (157.806645ms)
+✔ container switching still exhausts retries instead of mixing TS with retained fMP4 (1.995117ms)
+✔ MP4 and TS routes enforce proxy-compatible same-site admission and session/lease checks (241.581019ms)
+✔ two full HD fMP4 caches share downloads while enforcing all production lease limits (1146.600832ms)
+✔ invalid fMP4 reads and releases cannot extend an abandoned lease (3.118331ms)
+✔ last consumer release cancels a pending init.mp4 and late bytes cannot refill the cache (1.978192ms)
+✔ last consumer release cancels a pending b.m4s and late bytes cannot refill the cache (1.083606ms)
+✔ three next.mp4 404s reclaim both consumer leases without stopping the healthy session (6.930097ms)
+✔ three d.m4s 404s reclaim both consumer leases without stopping the healthy session (6.297173ms)
+✔ cold starts and sequence rollbacks fetch only two HD segments, while advancing polls fetch new segments (940.253753ms)
+✔ public HD segments over 6 MiB fit without increasing the session cache budget (28.18213ms)
+✔ playlist parser uses sequence, refuses escaping and unsupported references (1.123895ms)
+✔ downloads reject redirect responses, oversized declared and chunked bodies (4.73583ms)
+✔ one session is reserved before await; disk-free cache and capacity remain bounded (53.208604ms)
+✔ shutdown cancels in-flight downloads and late responses cannot refill cache (1.057857ms)
+✔ idle cleanup stops all polling without a background sweep (80.919483ms)
+✔ agency sequence rollback creates a monotonic local discontinuity (80.257692ms)
+✔ upstream discontinuity tags survive the media parser (0.507763ms)
+✔ a reused agency sequence with changed segment URI cannot remain stale (80.52945ms)
+✔ two consumers share downloads but release and abandoned expiry are independent (51.76092ms)
+✔ an abandoned consumer expires while a renewed consumer keeps the session (101.716723ms)
+✔ an expired old segment is skipped once as the live window advances (4.840404ms)
+✔ recent missing segments and access failures still exhaust the retry budget (151.443868ms)
+✔ 1080p segments fit the bounded downloader while oversized responses still fail (4.483406ms)
+✔ one sandboxed public player survives refreshes and unloads when hidden or deselected (2.951966ms)
+✔ Twitch uses the document host and provider controls, then unloads on switch (1.239286ms)
+✔ a changed player replaces the previous iframe and invalid URLs never reach the DOM (0.260857ms)
+✔ YouTube uses its public player, keeps the referrer and offers a source link when embedding fails (0.414824ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1948.740643
