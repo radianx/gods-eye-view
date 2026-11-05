@@ -3125,5 +3125,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "Der Anbieter hat den API-Schlüssel abgelehnt. Prüfe ihn in den Anbieter-Einstellungen.",
   "Too many chat requests. Try again in {seconds} s.": "Zu viele Chat-Anfragen. In {seconds} s erneut versuchen.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "Der Anbieter hat den Zugriff für diesen Schlüssel verweigert. Prüfe Projekt, Region oder Berechtigungen des Schlüssels.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "Das Anbieterkonto hat kein Guthaben mehr. Prüfe die Abrechnung oder wähle in den Einstellungen einen anderen KI-Anbieter."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "Das Anbieterkonto hat kein Guthaben mehr. Prüfe die Abrechnung oder wähle in den Einstellungen einen anderen KI-Anbieter.",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPT erhält Ihre Nachrichten, Referenzdaten und Werkzeugergebnisse über Ihr angemeldetes Konto. API-Schlüssel werden nicht verwendet. Die Sprachautorisierung ist separat.",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "Der Chat verwendet den API-Schlüssel des ausgewählten Sprachanbieters. Dabei können API-Gebühren anfallen.",
+  "Choose a chat connection in Chat Settings before sending a message.": "Wählen Sie vor dem Senden einer Nachricht eine Chatverbindung in den Chat-Einstellungen.",
+  "ChatGPT account changed. Refresh Chat Settings.": "Das ChatGPT-Konto wurde geändert. Aktualisieren Sie die Chat-Einstellungen.",
+  "Chat connection": "Chatverbindung",
+  "Choose a chat connection": "Chatverbindung auswählen",
+  "Voice provider API key · API charges apply": "API-Schlüssel des Sprachanbieters · API-Gebühren fallen an",
+  "No signed-in account": "Kein angemeldetes Konto",
+  "Choose an authorized model": "Autorisiertes Modell auswählen",
+  "ChatGPT authorization is separate from voice.": "Die ChatGPT-Autorisierung ist von der Spracheingabe getrennt."
 }

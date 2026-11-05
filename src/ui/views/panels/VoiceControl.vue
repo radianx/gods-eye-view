@@ -7,6 +7,7 @@ import { ASSISTANT_NAME } from '../../../voice/control.js';
 import VoiceCard from './VoiceCard.vue';
 import VoiceVisualizer from './VoiceVisualizer.vue';
 import ChatPanel from './ChatPanel.vue';
+import ChatAccountSettings from './ChatAccountSettings.vue';
 import PanelLayoutButtons from './PanelLayoutButtons.vue';
 import UiButton from '../../kit/UiButton.vue';
 import UiSelect from '../../kit/UiSelect.js';
@@ -124,8 +125,9 @@ const frameStyle = (panel) => ({
               <span>{{ t('AI Provider') }}</span>
               <UiSelect id="gev-voice-provider" class="gev-field" :aria-label="t('AI Provider')" :title="view.provider.title" :model-value="view.provider.value" @update:model-value="emit('provider-change', $event)"><option v-for="option in view.provider.options" :key="option.value" :value="option.value">{{ option.label }}</option></UiSelect>
             </label>
-            <p class="gev-voice-settings-note">{{ t('The selected AI provider is shared by voice and chat.') }}</p>
+            <p class="gev-voice-settings-note">{{ view.chat.accountSettings?.provider === 'chatgpt' ? t('ChatGPT authorization is separate from voice.') : t('The selected AI provider is shared by voice and chat.') }}</p>
             <div id="gev-settings-chat">
+              <ChatAccountSettings v-if="view.chat.accountSettings" :settings="view.chat.accountSettings" @action="emit" />
               <label class="gev-voice-preference gev-voice-preference-toggle"><input id="gev-chat-quick" type="checkbox" v-checked="view.chat.quickChecked" @change="emit('chat-quick-change', $event.target.checked)" /><span>{{ t('Show quick commands') }}</span></label>
               <p>{{ t('Chat replies are silent. No microphone access is needed.') }}</p>
             </div>

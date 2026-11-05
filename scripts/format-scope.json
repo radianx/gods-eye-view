@@ -1305,5 +1305,7 @@
   "src/voice/textChat.js",
   "src/voice/textProtocol.js",
   "src/agent/dockTextSession.js",
+  "src/agent/dockChatSettings.js",
+  "src/agent/dockChatSettings.test.mjs",
   "src/agent/dockTextSession.test.mjs"
 ]

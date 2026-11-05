@@ -3200,5 +3200,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "Il provider ha rifiutato la chiave API. Controllala nelle impostazioni del provider.",
   "Too many chat requests. Try again in {seconds} s.": "Troppe richieste di chat. Riprova tra {seconds} s.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "Il provider ha negato l’accesso per questa chiave. Controlla progetto, regione o autorizzazioni della chiave.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "L’account del provider ha esaurito il credito. Controlla la fatturazione o scegli un altro provider IA nelle impostazioni."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "L’account del provider ha esaurito il credito. Controlla la fatturazione o scegli un altro provider IA nelle impostazioni.",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPT riceve messaggi, dati di riferimento e risultati degli strumenti tramite il tuo account connesso. Le chiavi API non vengono utilizzate. L’autorizzazione vocale è separata.",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "La chat utilizza la chiave API del fornitore vocale selezionato e può comportare costi API.",
+  "Choose a chat connection in Chat Settings before sending a message.": "Scegli una connessione nelle impostazioni della chat prima di inviare un messaggio.",
+  "ChatGPT account changed. Refresh Chat Settings.": "L’account ChatGPT è cambiato. Aggiorna le impostazioni della chat.",
+  "Chat connection": "Connessione chat",
+  "Choose a chat connection": "Scegli una connessione chat",
+  "Voice provider API key · API charges apply": "Chiave API del fornitore vocale · si applicano costi API",
+  "No signed-in account": "Nessun account connesso",
+  "Choose an authorized model": "Scegli un modello autorizzato",
+  "ChatGPT authorization is separate from voice.": "L’autorizzazione ChatGPT è separata da quella vocale."
 }

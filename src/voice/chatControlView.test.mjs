@@ -364,3 +364,20 @@ test('the chat gear is named for the settings it opens', async (t) => {
     'Settings',
   );
 });
+
+test('an identity boundary clears transcript, draft, attachments and recent command recall', async (t) => {
+  const f = chat(t);
+  await f.send('private account command');
+  f.session.emit({ type: 'completion', status: 'completed' });
+  f.ui.emit('chat-input', 'private unsent draft');
+  f.control.reset();
+  assert.equal(f.ui.state.chat.draft, '');
+  assert.equal(f.ui.state.chat.miniReply, '');
+  assert.equal(f.ui.state.chat.empty, true);
+  assert.deepEqual(f.ui.state.chat.attachments, []);
+  assert.ok(
+    !JSON.stringify(f.ui.state.chat.suggestions).includes(
+      'private account command',
+    ),
+  );
+});

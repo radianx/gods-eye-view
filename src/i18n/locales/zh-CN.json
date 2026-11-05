@@ -3050,5 +3050,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "提供商拒绝了 API 密钥。请在提供商设置中检查。",
   "Too many chat requests. Try again in {seconds} s.": "聊天请求过多。请在 {seconds} 秒后重试。",
   "The provider refused access for this key. Check the key's project, region or permissions.": "提供商拒绝了此密钥的访问。请检查该密钥的项目、地区或权限。",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "提供商账户余额不足。请检查账单，或在设置中选择其他 AI 提供商。"
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "提供商账户余额不足。请检查账单，或在设置中选择其他 AI 提供商。",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPT 会通过已登录的账号接收你的消息、参考数据和工具结果。不会使用 API 密钥。语音授权独立进行。",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "聊天使用所选语音提供商的 API 密钥，可能产生 API 费用。",
+  "Choose a chat connection in Chat Settings before sending a message.": "发送消息前，请在聊天设置中选择连接方式。",
+  "ChatGPT account changed. Refresh Chat Settings.": "ChatGPT 账号已更改。请刷新聊天设置。",
+  "Chat connection": "聊天连接",
+  "Choose a chat connection": "选择聊天连接",
+  "Voice provider API key · API charges apply": "语音提供商 API 密钥 · 需支付 API 费用",
+  "No signed-in account": "没有已登录的账号",
+  "Choose an authorized model": "选择已获授权的模型",
+  "ChatGPT authorization is separate from voice.": "ChatGPT 授权与语音授权相互独立。"
 }

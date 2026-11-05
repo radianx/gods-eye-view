@@ -1698,3 +1698,22 @@ body[data-assistant-docked='true'] #right-context-rail {
     --dock-side-compact: 3.25rem;
   }
 }
+
+.gev-chat-account-settings {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color, #ffffff26);
+}
+
+.gev-chat-account-settings .gev-field {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.gev-chat-account-settings p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

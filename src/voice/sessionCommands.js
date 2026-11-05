@@ -25,6 +25,7 @@ export function createVoiceCommands({
   createSession,
   createController,
   createTextSession,
+  createChatSettings,
   backend,
   signal,
   debugSink,
@@ -46,7 +47,19 @@ export function createVoiceCommands({
   const ui = createControl(panelHost ? { panel: true } : {});
   let actionObserver;
   let panelMount;
-  const session = createVoiceSession({
+  let chat;
+  let session;
+  const chatSettings =
+    panelHost && !createTextSession && createChatSettings
+      ? createChatSettings({
+          ui,
+          invalidate: () => {
+            session?.stop();
+            chat?.reset();
+          },
+        })
+      : null;
+  session = createVoiceSession({
     runner,
     signal,
     createAdapter: (hooks) => {
@@ -60,7 +73,17 @@ export function createVoiceCommands({
         backend,
         debugSink,
         createController,
-        ...(createTextSession ? { createTextSession } : {}),
+        ...(createTextSession
+          ? { createTextSession }
+          : chatSettings
+            ? {
+                createTextSession: (options) =>
+                  chatSettings.createTextSession({
+                    ...options,
+                    provider: nativePanelProvider || provider,
+                  }),
+              }
+            : {}),
         pointer,
         radioLayer: dataManager?.layers?.get('radio')?.module || null,
       });
@@ -219,7 +242,7 @@ export function createVoiceCommands({
     card?.outline(event);
     session.sendMapEvent({ type: 'map_annotation_outline', ...event });
   });
-  const chat = panelMount
+  chat = panelMount
     ? bindChatControl({
         ui,
         session,
@@ -300,6 +323,7 @@ export function createVoiceCommands({
     offProvider?.();
     for (const off of layouts) off();
     unbindMiniPreview?.();
+    chatSettings?.destroy();
     chat?.destroy();
     annotationUnsubscribe?.();
     updateStatus();

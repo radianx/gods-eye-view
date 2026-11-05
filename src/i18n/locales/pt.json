@@ -3200,5 +3200,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "O provedor recusou a chave de API. Verifique-a nas configurações do provedor.",
   "Too many chat requests. Try again in {seconds} s.": "Pedidos de chat demais. Tente de novo em {seconds} s.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "O provedor negou o acesso para esta chave. Verifique o projeto, a região ou as permissões da chave.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "A conta do provedor está sem crédito. Verifique o faturamento ou escolha outro provedor de IA nas configurações."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "A conta do provedor está sem crédito. Verifique o faturamento ou escolha outro provedor de IA nas configurações.",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "O ChatGPT recebe suas mensagens, dados de referência e resultados das ferramentas pela sua conta conectada. Não são usadas chaves de API. A autorização de voz é separada.",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "O chat usa a chave de API do provedor de voz selecionado e pode gerar cobranças de API.",
+  "Choose a chat connection in Chat Settings before sending a message.": "Escolha uma conexão nas configurações do chat antes de enviar uma mensagem.",
+  "ChatGPT account changed. Refresh Chat Settings.": "A conta do ChatGPT mudou. Atualize as configurações do chat.",
+  "Chat connection": "Conexão do chat",
+  "Choose a chat connection": "Escolher uma conexão do chat",
+  "Voice provider API key · API charges apply": "Chave de API do provedor de voz · há cobranças de API",
+  "No signed-in account": "Nenhuma conta conectada",
+  "Choose an authorized model": "Escolher um modelo autorizado",
+  "ChatGPT authorization is separate from voice.": "A autorização do ChatGPT é separada da voz."
 }

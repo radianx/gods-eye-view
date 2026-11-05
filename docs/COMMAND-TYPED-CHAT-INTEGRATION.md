@@ -1,5 +1,50 @@
 # Integración temporal de #1331 con #1507
 
+## Actualización: controles de Chat Settings — 5 de noviembre de 2026 (Argentina)
+
+La integración ahora conecta el adaptador existente `dockTextSession.js` al dock de #1507 desde la composición de la aplicación. Chat Settings ofrece conexión explícita, autorización ChatGPT, identificación y cambio de cuenta, selección de modelos autorizados y cierre de sesión. La rama original `feat/command-chatgpt-plan` se conserva en `f8154e34d08314eca6ad3118e9b451b4a8b842b1`.
+
+### Implementación para revisar
+
+- `src/agent/dockChatSettings.js`: propietario de selección y ciclo de autorización para el dock; utiliza las rutas locales existentes de #1331. Descubre modelos ligados al binding actual y rechaza listados tardíos. Muestra un enlace local de un solo uso cuando el navegador bloquea la ventana de autorización; nunca acepta una URL externa desde esa respuesta.
+- `src/ui/views/panels/ChatAccountSettings.vue`: controles accesibles dentro de los Settings compartidos. La cuenta se identifica con la etiqueta del servidor y el modelo se elige de la lista autorizada. Los avisos distinguen el plan ChatGPT de las claves API y su facturación.
+- `src/app/tools.js` inyecta el propietario de Settings; `src/voice/sessionCommands.js` conserva el contrato de fábrica de texto. Los controles comunes no importan COMMAND ni otro protocolo. No se reconstruyó el puente ni se añadió otro ejecutor de acciones.
+- OpenAI y Gemini mantienen el motor de texto de #1507. La conexión por clave se habilita eligiendo explícitamente «Voice provider API key · API charges apply». La preferencia puede recordarse. Una autorización ChatGPT ausente o fallida bloquea el envío: no cambia a esa conexión.
+- Cambiar conexión, cuenta o modelo cancela la sesión anterior e invalida sus eventos. Se borran transcript, borrador, adjuntos, animación de respuesta y comandos recientes. Cada selección inicia un motor nuevo; no se restauran conversaciones de otra cuenta. STOP conserva la semántica de cancelación del turno existente.
+- Sólo se persisten conexión y preferencia de modelo por ID opaco de cuenta. El servidor conserva sus registros protegidos de OAuth. No se escriben tokens, bindings, reasoning ni conversaciones en localStorage. Una recarga vuelve a consultar estado y modelos; una preferencia guardada no demuestra autorización.
+- Se consulta el estado antes de iniciar ChatGPT y periódicamente mientras esa conexión está seleccionada. Un cambio de binding observado, logout externo o error de consulta cancela la sesión. La admisión local y la verificación del binding por solicitud siguen perteneciendo al servidor; la consulta periódica no promete cancelación instantánea entre pestañas.
+- El dock aplica el límite de 8.000 caracteres de COMMAND antes de enviar texto y referencias adjuntas. Esto evita truncamiento silencioso, pero no declara equivalencia completa de adjuntos/eventos de mapa.
+
+### Validación de esta actualización
+
+| Comprobación | Resultado |
+|---|---|
+| Regresiones específicas de Settings, puente, interfaz y cambios de proveedor | 53 aprobadas; incluyen 13 regresiones nuevas |
+| `npm test`, pruebas generales | 10.890 aprobadas; 7 omitidas; 0 fallos |
+| Asignación de memoria, ejecutada por el runner en procesos separados con GC | 15 aprobadas (1 focus + 14 world overlay), Node 24.22.1 |
+| `npm run build` | Correcto; aviso de tamaño de chunks existente |
+| `npm run i18n` | Once locales completos, 2.912 mensajes |
+| `npm run format:check` | 1.819 archivos comprobados |
+| Importaciones y límites de paquetes | Correctos; los módulos nuevos están registrados |
+| `git diff --check` | Correcto |
+
+La versión inicial del cableado alcanzaba `realtimeProtocol.js` desde los controles comunes mediante COMMAND; se corrigió inyectando Settings desde `src/app/tools.js`. La comparación con el commit inicial y la ejecución final confirman que no queda esa infracción.
+
+Las pruebas de UI usan el componente Vue real y DOM simulado, con cuentas y respuestas de red ficticias. Las pruebas de aislamiento ejercitan la composición de sesiones del dock, el puente y el motor COMMAND. No son autorización OAuth ni inferencia real.
+
+No se pudo ejecutar Chromium: su instalación agotó el plazo de conexión al proxy. No hubo sesión real, consumo de una clave facturable, verificación Windows ni afirmación de compatibilidad completa con adjuntos o eventos de mapa.
+
+### Antes de simplificar el PR #1331
+
+1. Verificar con una cuenta real autorización, descubrimiento de modelos, Responses con continuación opaca, expiración/renovación y logout/revocación. Repetir el cambio entre dos cuentas y la cancelación durante una acción.
+2. Ejecutar la interfaz en Chromium y revisar tamaños de escritorio/móvil y RTL. Las traducciones están completas para los once locales del repositorio, pero eso no sustituye revisión lingüística ni visual.
+3. Resolver y probar la equivalencia de referencias adjuntas, eventos de mapa y radio handoff. `sendMapEvent()` en el puente sigue devolviendo `false`.
+4. Después de esas verificaciones, extraer sobre main una propuesta enfocada en autorización ChatGPT, modelos y Responses sobre el dock existente. Retirar de esa propuesta la consola independiente y separar los proveedores adicionales; conservar atribuciones e historias. Esta actualización todavía conserva esos módulos de #1331 y no cambia su rama original ni su estado de borrador.
+
+El resto del documento conserva el análisis y la propuesta histórica del prototipo, anteriores a esta actualización. Sus secciones «Cambios preparados» y «Límite deliberado del prototipo» describen aquel estado y no los controles ahora implementados.
+
+---
+
 Revisión: 3 de noviembre de 2026, hora Argentina. No se publicó ningún cambio ni comentario.
 
 ## Fuentes y alcance exacto

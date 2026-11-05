@@ -8,6 +8,7 @@ import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { mountAgentConsole } from '../agent/agentConsole.js';
+import { bindDockChatSettings } from '../agent/dockChatSettings.js';
 import { installViews, isEmbeddedInline } from './embed.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import { installLayerReleaseTrim } from '../sceneCommandRelease.js';
@@ -201,6 +202,7 @@ export function createApplicationTools({
     if (window.__godsEyeView === debug) delete window.__godsEyeView;
   });
   const voiceCommands = initGevVoiceCommands({
+    createChatSettings: bindDockChatSettings,
     ...voice,
     floorServices: operations.surface.groundFloor,
     annotationResolver: operations.annotationResolver,

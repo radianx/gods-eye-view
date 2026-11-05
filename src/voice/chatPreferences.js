@@ -62,6 +62,11 @@ export function bindChatPreferences({ ui, getDraft, setDraft }) {
   render();
   return {
     render,
+    clear() {
+      recent = [];
+      resetHistory();
+      render();
+    },
     setQuick(value) {
       quick = Boolean(value);
       try {

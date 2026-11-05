@@ -3275,5 +3275,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "Провайдер отклонил ключ API. Проверьте его в настройках провайдера.",
   "Too many chat requests. Try again in {seconds} s.": "Слишком много запросов чата. Повторите через {seconds} с.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "Провайдер запретил доступ для этого ключа. Проверьте проект, регион или разрешения ключа.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "На счёте провайдера закончились средства. Проверьте оплату или выберите другого провайдера ИИ в настройках."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "На счёте провайдера закончились средства. Проверьте оплату или выберите другого провайдера ИИ в настройках.",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPT получает ваши сообщения, справочные данные и результаты инструментов через ваш авторизованный аккаунт. Ключи API не используются. Голосовая авторизация выполняется отдельно.",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "Чат использует ключ API выбранного голосового провайдера и может повлечь расходы на API.",
+  "Choose a chat connection in Chat Settings before sending a message.": "Перед отправкой сообщения выберите подключение в настройках чата.",
+  "ChatGPT account changed. Refresh Chat Settings.": "Аккаунт ChatGPT изменился. Обновите настройки чата.",
+  "Chat connection": "Подключение чата",
+  "Choose a chat connection": "Выберите подключение чата",
+  "Voice provider API key · API charges apply": "Ключ API голосового провайдера · взимается плата за API",
+  "No signed-in account": "Нет авторизованного аккаунта",
+  "Choose an authorized model": "Выберите разрешённую модель",
+  "ChatGPT authorization is separate from voice.": "Авторизация ChatGPT выполняется отдельно от голосовой."
 }

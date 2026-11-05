@@ -3200,5 +3200,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "El proveedor rechazó la clave de API. Revísala en Ajustes del proveedor.",
   "Too many chat requests. Try again in {seconds} s.": "Demasiadas solicitudes de chat. Vuelve a intentarlo en {seconds} s.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "El proveedor denegó el acceso a esta clave. Revisa el proyecto, la región o los permisos de la clave.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "La cuenta del proveedor no tiene crédito. Revisa la facturación o elige otro proveedor de IA en Ajustes."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "La cuenta del proveedor no tiene crédito. Revisa la facturación o elige otro proveedor de IA en Ajustes.",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPT recibe tus mensajes, datos de referencia y resultados de herramientas a través de la cuenta con la que iniciaste sesión. No se usan claves API. La autorización de voz es independiente.",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "El chat usa la clave API del proveedor de voz seleccionado y puede generar cargos por uso de la API.",
+  "Choose a chat connection in Chat Settings before sending a message.": "Elegí una conexión de chat en los ajustes de chat antes de enviar un mensaje.",
+  "ChatGPT account changed. Refresh Chat Settings.": "La cuenta de ChatGPT cambió. Actualizá los ajustes de chat.",
+  "Chat connection": "Conexión de chat",
+  "Choose a chat connection": "Elegí una conexión de chat",
+  "Voice provider API key · API charges apply": "Clave API del proveedor de voz · genera cargos por API",
+  "No signed-in account": "Ninguna cuenta conectada",
+  "Choose an authorized model": "Elegí un modelo autorizado",
+  "ChatGPT authorization is separate from voice.": "La autorización de ChatGPT es independiente de la voz."
 }

@@ -3050,5 +3050,15 @@
   "The provider rejected the API key. Check it in Provider Settings.": "プロバイダーが API キーを拒否しました。プロバイダー設定で確認してください。",
   "Too many chat requests. Try again in {seconds} s.": "チャットのリクエストが多すぎます。{seconds} 秒後にもう一度お試しください。",
   "The provider refused access for this key. Check the key's project, region or permissions.": "プロバイダーがこのキーへのアクセスを拒否しました。キーのプロジェクト、地域、権限を確認してください。",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "プロバイダーのアカウントのクレジットが不足しています。請求を確認するか、設定で別の AI プロバイダーを選んでください。"
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "プロバイダーのアカウントのクレジットが不足しています。請求を確認するか、設定で別の AI プロバイダーを選んでください。",
+  "ChatGPT receives your messages, reference data and tool results through your signed-in account. API keys are not used. Voice authorization is separate.": "ChatGPTには、ログイン中のアカウントを通じてメッセージ、参考データ、ツールの結果が送信されます。APIキーは使用しません。音声の認証とは別です。",
+  "Chat uses the selected voice provider’s API key and may incur API charges.": "チャットは選択した音声プロバイダーのAPIキーを使用し、API料金が発生する場合があります。",
+  "Choose a chat connection in Chat Settings before sending a message.": "メッセージを送信する前に、チャット設定で接続方法を選択してください。",
+  "ChatGPT account changed. Refresh Chat Settings.": "ChatGPTアカウントが変更されました。チャット設定を更新してください。",
+  "Chat connection": "チャット接続",
+  "Choose a chat connection": "チャットの接続方法を選択",
+  "Voice provider API key · API charges apply": "音声プロバイダーのAPIキー · API料金が発生します",
+  "No signed-in account": "ログイン中のアカウントはありません",
+  "Choose an authorized model": "認可されたモデルを選択",
+  "ChatGPT authorization is separate from voice.": "ChatGPTの認証は音声の認証とは別です。"
 }
