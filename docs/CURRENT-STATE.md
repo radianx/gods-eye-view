@@ -1,5 +1,16 @@
 # God's Eye View Current State
 
+Active Fires optionally includes CONAE’s `FocosGOES_24hs` WFS product when
+`CONAE_GOES_ENABLED=1`. It uses the existing `/api/firms` snapshot and map layer,
+with an independent 10-minute memory cache, fixed upstream URL, bounded reads,
+single-flight refresh and failure backoff. FIRMS retains its key, quota and
+30-minute memory/disk cache. Either provider can run alone; partial failures
+and stale data remain visible. CONAE acquisition dates explicitly identify
+UTC-3 and are converted to UTC. Missing GOES confidence remains null in cards,
+selection context and analyst records. These are thermal observations, not
+confirmed wildfire incidents. See [CONAE-GOES.md](CONAE-GOES.md) for the source
+contract, implementation rationale and live-source verification limits.
+
 Docker Compose mounts the checkout with the shared SELinux `:z` label so
 containers can read it on enforcing SELinux hosts. The separate image-owned
 `node_modules` volume and loopback-only port publishing remain unchanged.
@@ -2381,10 +2392,10 @@ reporting are unchanged.
 
 ## FIRMS source status
 
-The FIRMS proxy requests VIIRS NOAA-20, VIIRS NOAA-21 and MODIS NRT (Terra and
-Aqua). It no longer requests VIIRS Suomi NPP: NASA stopped delivering Suomi NPP
-data on 2026-11-02, and the source returned no rows while still costing one
-MAP_KEY transaction per refresh.
+Following #1552, FIRMS requests VIIRS NOAA-20, VIIRS NOAA-21 and MODIS NRT,
+without requesting the retired Suomi NPP source. Historical SNPP records remain
+readable. Opt-in CONAE GOES retains independent acquisition/cache state, keyless
+operation, partial-error reporting and null unpublished FRP/confidence.
 
 The FIRMS CSV parser rejects impossible acquisition calendar dates before the proxy filters records to the trailing 24 hours, while retaining valid UTC acquisition times.
 The `get_active_fires` tool reports acquisition times as UTC ISO timestamps,
@@ -6912,6 +6923,23 @@ when their footprints touch or contain one another, never across a seam toleranc
   calibration commit/cancel and stale-camera/disposal guards against an installed
   controller with fixture ports, plus default/Cyber and narrow translated layouts.
 
+The CONAE GOES thermal detections, mixed-source counts and partial-source warnings support English, Spanish, Russian and Simplified Chinese (`zh-CN`). Provider and station names remain unchanged; numbers and dates follow the selected UI locale.
+
+CONAE observations with unpublished FRP use a neutral gray sprite/card/cell
+accent, outside the measured intensity scale (including measured zero). An
+empty snapshot clears existing sprites, heat cells, overlay cards, pick indexes
+and context registrations. FIRMS context labels retain the English data contract
+used by voice tools; the presentation layer translates them.
+
+The optional joint gates `scripts/qa-conae-intensity.mjs` and
+`scripts/qa-conae-intensity-browser.mjs` require a **temporary integration** of
+PR #1426 with this CONAE branch. They are not baseline unit tests and do not
+publish #1426's unmerged features. The joint policy retains unknown CONAE FRP
+and confidence as null: default 0 MW / All includes them; a positive FRP floor
+excludes unpublished FRP, and Nominal+/High excludes unpublished confidence.
+Unknown confidence is not a low rating, nor is unknown FRP a zero measurement.
+These satellite observations do not establish confirmed wildfire incidents.
+
 ## Docker health reporting
 
 The Docker image probes its local HTTP root with Node every 30 seconds, using
@@ -6920,3 +6948,14 @@ the container healthy. Checks time out after 10 seconds, with a 30-second
 startup grace period and three consecutive failures before reporting unhealthy.
 This reports app HTTP availability, not individual provider health, and does not
 configure automatic restarts.
+
+## Temporary INPE + CONAE compatibility branch
+
+The simultaneous-provider experiment is documented in
+[INPE-CONAE-INTEGRATION.md](INPE-CONAE-INTEGRATION.md). Keyless INPE and opt-in
+CONAE now combine independently; a NASA key keeps existing NASA behavior unless
+INPE is explicitly enabled too. Responses retain provider footprints, freshness,
+partial-source failures and unknown measurements. GOES-19 records from different
+agencies are retained, including coincident positions and times. Counts are
+observations, not unique wildfire incidents. Positive intensity/confidence
+filters exclude unknown values consistently in the layer and fire query tool.

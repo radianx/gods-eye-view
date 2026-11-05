@@ -4,8 +4,9 @@ import { promises as fsp } from 'node:fs';
 import { Readable } from 'node:stream';
 
 import { filterTrailing24h, parseFirmsCsv } from '../../src/data/firmsCsv.js';
-import { readResponseTextCapped } from './common/http.js';
 import { createInpeFires } from './inpeQueimadas.js';
+import { createConaeGoesSource } from './conae-goes.js';
+import { readResponseTextCapped } from './common/http.js';
 
 const NULL_BODY_STATUSES = new Set([204, 205, 304]);
 
@@ -143,19 +144,18 @@ export async function fetchFirms(
  * fetch across dev-server restarts. Pattern mirrors celestrakProxy.
  *
  * VIIRS_SNPP_NRT is not requested: NASA stopped delivering Suomi NPP data on
- * 2026-11-02, so that source only spent a transaction per refresh (#849).
+ * 2026-11-02, so that source only spent a transaction per refresh (#1552).
+ * Historical satellite labels and cached observations remain supported.
  *
  * Routes:
  *   GET /api/firms        → {fetchedAt, stale, ttlMs, sources, count, fires}
  *   GET /api/firms/status → {hasKey, lastFetch, count, stale, ttlMs, transactions}
  *
- * Keyless (no FIRMS_MAP_KEY): /api/firms serves INPE Programa Queimadas'
- * South American detections (server/providers/inpeQueimadas.js) with
- * `provider: 'inpe'` and `coverage: 'south-america'`, refreshed every 10
- * minutes under the same single-flight and serve-stale rules. Status reports
- * {hasKey:false, keyless:'inpe'}. FIRMS_INPE_ENABLED=0 restores the old
- * keyless answer, 503 {error:'no_key'}. FIRMS itself is never touched without
- * a key.
+ * CONAE_GOES_ENABLED=1 optionally adds CONAE GOES via an independent cache.
+ * INPE defaults on without a NASA key; FIRMS_INPE_ENABLED=0 disables it.
+ * Explicit FIRMS_INPE_ENABLED=1 adds INPE alongside NASA too.
+ * Each provider keeps independent cache, single-flight and failure state.
+ * NASA upstream is never touched without a key; status.hasKey refers to NASA.
  *
  * @returns {import('vite').Plugin}
  */
@@ -183,16 +183,88 @@ export function firmsProxy() {
   let statusInflight = null;
 
   const mapKey = () => String(process.env.FIRMS_MAP_KEY || '').trim();
-
-  /** INPE publishes every 10 minutes; refreshing faster would only re-read the listing. */
+  const conaeEnabled = () => process.env.CONAE_GOES_ENABLED === '1';
+  const conae = createConaeGoesSource();
   const INPE_TTL_MS = 10 * 60_000;
-  const inpeEnabled = () =>
-    String(process.env.FIRMS_INPE_ENABLED ?? '').trim() !== '0';
+  // Default keyless fallback; explicit 1 also adds INPE alongside NASA.
+  const inpeEnabled = (key) =>
+    process.env.FIRMS_INPE_ENABLED === '1' ||
+    (!key && String(process.env.FIRMS_INPE_ENABLED ?? '').trim() !== '0');
   const inpe = createInpeFires();
-  /** @type {?{at: number, sources: Array<object>, fires: Array<object>}} */
   let inpeMem = null;
-  /** @type {?Promise<?{at: number, sources: Array<object>, fires: Array<object>}>} */
   let inpeInflight = null;
+  let inpeRetryAt = 0;
+  /** Observe INPE health without acquiring any data. */
+  function getInpeStatus() {
+    return {
+      fetchedAt: inpeMem?.at ?? null,
+      count: inpeMem
+        ? filterTrailing24h(inpeMem.fires, Date.now()).length
+        : null,
+      stale: inpeMem
+        ? Date.now() - inpeMem.at >= INPE_TTL_MS || inpeRetryAt > 0
+        : false,
+      unavailable: inpeRetryAt > 0,
+      partial: inpeMem ? inpeMem.sources.some((source) => !source.ok) : false,
+      ttlMs: INPE_TTL_MS,
+    };
+  }
+
+  /** The keyless payload: FIRMS' shape plus where its detections come from. */
+  function buildInpePayload(entry, stale) {
+    return {
+      ...buildPayload(entry, stale),
+      sourceLabel: 'INPE Programa Queimadas',
+      sources: entry.sources.map((source) => ({
+        ...source,
+        ok: !stale && source.ok,
+        stale,
+      })),
+      ttlMs: INPE_TTL_MS,
+      provider: 'inpe',
+      coverage: 'south-america',
+    };
+  }
+
+  /** Keyless path: INPE's South American detections, same cache rules as FIRMS. */
+  async function getInpeSnapshot() {
+    const entry = inpeMem;
+    if (entry && Date.now() - entry.at < INPE_TTL_MS) {
+      return buildInpePayload(entry, false);
+    }
+    if (Date.now() < inpeRetryAt) {
+      if (entry) return buildInpePayload(entry, true);
+      throw new Error('INPE retry pending');
+    }
+    if (!inpeInflight) {
+      inpeInflight = inpe
+        .refresh()
+        .then((fresh) => {
+          inpeMem = fresh;
+          inpeRetryAt = 0;
+          return fresh;
+        })
+        .catch((err) => {
+          console.warn(
+            `[firms-proxy] INPE refresh failed (${err?.message || err}) — serving cache if any`,
+          );
+          inpeRetryAt = Date.now() + 60_000;
+          return null;
+        })
+        .finally(() => {
+          inpeInflight = null;
+        });
+    }
+    const pending = inpeInflight;
+    const fresh = await pending;
+    if (fresh) {
+      return buildInpePayload(fresh, false);
+    } else if (entry) {
+      return buildInpePayload(entry, true);
+    } else {
+      throw new Error('INPE fetch failed and no cache available');
+    }
+  }
 
   async function readDiskOnce() {
     if (diskChecked) return;
@@ -279,57 +351,15 @@ export function firmsProxy() {
     const fires = filterTrailing24h(entry.fires, Date.now());
     return {
       fetchedAt: entry.at,
+      sourceLabel: 'NASA FIRMS',
+      provider: 'firms',
+      coverage: 'world',
       stale,
       ttlMs: TTL_MS,
       sources: entry.sources,
       count: fires.length,
       fires,
     };
-  }
-
-  /** The keyless payload: FIRMS' shape plus where its detections come from. */
-  function buildInpePayload(entry, stale) {
-    return {
-      ...buildPayload(entry, stale),
-      ttlMs: INPE_TTL_MS,
-      provider: 'inpe',
-      coverage: 'south-america',
-    };
-  }
-
-  /** Keyless path: INPE's South American detections, same cache rules as FIRMS. */
-  async function serveInpe(sendJson) {
-    const entry = inpeMem;
-    if (entry && Date.now() - entry.at < INPE_TTL_MS) {
-      sendJson(200, buildInpePayload(entry, false));
-      return;
-    }
-    if (!inpeInflight) {
-      inpeInflight = inpe
-        .refresh()
-        .then((fresh) => {
-          inpeMem = fresh;
-          return fresh;
-        })
-        .catch((err) => {
-          console.warn(
-            `[firms-proxy] INPE refresh failed (${err?.message || err}) — serving cache if any`,
-          );
-          return null;
-        })
-        .finally(() => {
-          inpeInflight = null;
-        });
-    }
-    const pending = inpeInflight;
-    const fresh = await pending;
-    if (fresh) {
-      sendJson(200, buildInpePayload(fresh, false));
-    } else if (entry) {
-      sendJson(200, buildInpePayload(entry, true));
-    } else {
-      sendJson(502, { error: 'INPE fetch failed and no cache available' });
-    }
   }
 
   /** mapkey_status transactions, cached 5 min, best-effort (null on failure). */
@@ -374,6 +404,36 @@ export function firmsProxy() {
     return statusInflight;
   }
 
+  /** Read FIRMS through its existing quota-protecting memory/disk cache. */
+  async function getFirmsSnapshot(key) {
+    const entry = mem;
+    if (entry && Date.now() - entry.at < TTL_MS) {
+      return buildPayload(entry, false);
+    }
+    if (!inflight) {
+      inflight = refreshUpstream(key)
+        .then(async (fresh) => {
+          mem = fresh;
+          await writeDisk(fresh);
+          return fresh;
+        })
+        .catch((err) => {
+          console.warn(
+            `[firms-proxy] refresh failed (${err?.message || err}) — serving cache if any`,
+          );
+          return null;
+        })
+        .finally(() => {
+          inflight = null;
+        });
+    }
+    const pending = inflight;
+    const fresh = await pending;
+    if (fresh) return buildPayload(fresh, false);
+    if (entry) return buildPayload(entry, true);
+    throw new Error('firms fetch failed and no cache available');
+  }
+
   const installMiddleware = (server) => {
     server.middlewares.use('/api/firms', async (req, res) => {
       const sendJson = (status, obj) => {
@@ -391,17 +451,33 @@ export function firmsProxy() {
 
         if (subPath === '/status') {
           if (!key) {
-            const keyless = inpeEnabled();
+            const cached = [
+              ...(inpeEnabled(key) ? [getInpeStatus()] : []),
+              ...(conaeEnabled() ? [conae.getStatus()] : []),
+            ].filter((s) => s.fetchedAt != null);
             sendJson(200, {
               hasKey: false,
-              keyless: keyless ? 'inpe' : null,
-              lastFetch: keyless && inpeMem ? inpeMem.at : null,
-              count: keyless && inpeMem ? inpeMem.fires.length : null,
-              stale:
-                keyless && inpeMem
-                  ? Date.now() - inpeMem.at >= INPE_TTL_MS
-                  : false,
-              ttlMs: keyless ? INPE_TTL_MS : TTL_MS,
+              keyless:
+                [
+                  inpeEnabled(key) ? 'inpe' : null,
+                  conaeEnabled() ? 'conae-goes' : null,
+                ]
+                  .filter(Boolean)
+                  .join('+') || null,
+              ...(conaeEnabled() ? { conae: conae.getStatus() } : {}),
+              ...(inpeEnabled(key)
+                ? {
+                    inpe: getInpeStatus(),
+                  }
+                : {}),
+              lastFetch: cached.length
+                ? Math.min(...cached.map((s) => s.fetchedAt))
+                : null,
+              count: cached.length
+                ? cached.reduce((n, s) => n + (s.count || 0), 0)
+                : null,
+              stale: cached.some((s) => s.stale),
+              ttlMs: inpeEnabled(key) || conaeEnabled() ? INPE_TTL_MS : TTL_MS,
               transactions: null,
             });
             return;
@@ -409,6 +485,12 @@ export function firmsProxy() {
           const transactions = await getTransactions(key);
           sendJson(200, {
             hasKey: true,
+            ...(conaeEnabled() ? { conae: conae.getStatus() } : {}),
+            ...(inpeEnabled(key)
+              ? {
+                  inpe: getInpeStatus(),
+                }
+              : {}),
             lastFetch: mem ? mem.at : null,
             count: mem ? mem.fires.length : null,
             stale: mem ? Date.now() - mem.at >= TTL_MS : false,
@@ -418,48 +500,72 @@ export function firmsProxy() {
           return;
         }
 
-        if (!key) {
-          if (inpeEnabled()) await serveInpe(sendJson);
-          else sendJson(503, { error: 'no_key' });
+        if (!key && !conaeEnabled() && !inpeEnabled(key)) {
+          sendJson(503, { error: 'no_key' });
           return;
         }
 
-        const entry = mem;
-        if (entry && Date.now() - entry.at < TTL_MS) {
-          sendJson(200, buildPayload(entry, false));
+        const providers = [];
+        if (key)
+          providers.push({
+            name: 'NASA FIRMS',
+            load: () => getFirmsSnapshot(key),
+          });
+        if (inpeEnabled(key))
+          providers.push({
+            name: 'INPE Programa Queimadas',
+            load: () => getInpeSnapshot(),
+          });
+        if (conaeEnabled())
+          providers.push({
+            name: 'CONAE GOES',
+            load: () => conae.getSnapshot(),
+          });
+        const results = await Promise.allSettled(
+          providers.map((p) => p.load()),
+        );
+        const snapshots = [];
+        const sources = [];
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          if (result.status === 'fulfilled') {
+            snapshots.push(result.value);
+            sources.push(...result.value.sources);
+          } else {
+            sources.push({ source: providers[i].name, count: 0, ok: false });
+          }
+        }
+        if (!snapshots.length) {
+          sendJson(502, { error: 'active fire sources unavailable', sources });
           return;
         }
-        // Stale or missing → refresh, single-flight (concurrent requests
-        // share one upstream pass). Capture the promise locally BEFORE
-        // awaiting: the .finally() nulls `inflight` the moment it settles.
-        if (!inflight) {
-          inflight = refreshUpstream(key)
-            .then(async (fresh) => {
-              mem = fresh;
-              await writeDisk(fresh);
-              return fresh;
-            })
-            .catch((err) => {
-              console.warn(
-                `[firms-proxy] refresh failed (${err?.message || err}) — serving cache if any`,
-              );
-              return null;
-            })
-            .finally(() => {
-              inflight = null;
-            });
+        const fires = [];
+        for (const snapshot of snapshots) {
+          for (const fire of snapshot.fires) fires.push(fire);
         }
-        const pending = inflight;
-        const fresh = await pending;
-        if (fresh) {
-          sendJson(200, buildPayload(fresh, false));
-        } else if (entry) {
-          sendJson(200, buildPayload(entry, true)); // upstream down — stale beats empty
-        } else {
-          sendJson(502, {
-            error: 'firms fetch failed and no cache available',
-          });
-        }
+        sendJson(200, {
+          fetchedAt: Math.min(...snapshots.map((s) => s.fetchedAt)),
+          sourceLabel: snapshots.map((s) => s.sourceLabel).join(' + '),
+          stale: snapshots.some((s) => s.stale),
+          provider: snapshots.length === 1 ? snapshots[0].provider : 'mixed',
+          coverage: snapshots.some((s) => s.coverage === 'world')
+            ? 'world'
+            : snapshots.length === 1
+              ? snapshots[0].coverage
+              : 'regional',
+          providers: snapshots.map((s) => ({
+            provider: s.provider,
+            source: s.sourceLabel,
+            coverage: s.coverage,
+            fetchedAt: s.fetchedAt,
+            stale: s.stale,
+            partial: s.sources.some((source) => source.ok === false),
+          })),
+          ttlMs: Math.min(...snapshots.map((s) => s.ttlMs)),
+          sources,
+          count: fires.length,
+          fires,
+        });
       } catch (err) {
         console.warn('[firms-proxy] error:', err?.message || err);
         sendJson(500, { error: 'firms proxy error' });

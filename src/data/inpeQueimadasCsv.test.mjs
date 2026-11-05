@@ -74,7 +74,7 @@ test('every satellite seen on 2026-10-29 maps to a short name the card can show'
     'AQUA_M-M': ['Aqua', 'MODIS', 'AQUA'],
     'TERRA_M-T': ['Terra', 'MODIS', 'TERRA'],
     'TERRA_M-M': ['Terra', 'MODIS', 'TERRA'],
-    'GOES-19': ['G19', 'ABI', 'G19'],
+    'GOES-19': ['G19', 'ABI', 'GOES-19'],
     'MSG-03': ['MSG3', 'SEVIRI', 'MSG3'],
     'METOP-B': ['MetOpB', 'AVHRR', 'METOPB'],
     'METOP-C': ['MetOpC', 'AVHRR', 'METOPC'],

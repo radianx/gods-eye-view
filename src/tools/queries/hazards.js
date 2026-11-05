@@ -94,10 +94,9 @@ export const getActiveFires = defineTool({
   name: 'get_active_fires',
   title: 'Active fires',
   description:
-    'Satellite fire detections from NASA FIRMS in the last 24 hours within an ' +
-    'area, most intense (fire radiative power) first. Optionally limited to a ' +
-    'minimum fire radiative power in megawatts and a confidence level — the ' +
-    "same filter as the Active Fires layer's intensity controls.",
+    'Satellite thermal detections from configured NASA FIRMS, INPE and CONAE GOES sources ' +
+    'in the last 24 hours within an area, known FRP first. Optional minimum FRP and ' +
+    'confidence filters exclude observations with unknown values. Observations are not confirmed wildfire incidents.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -129,7 +128,7 @@ export const getActiveFires = defineTool({
     if (snapshot.keyRequired)
       throw new ToolError(
         'unavailable',
-        'Fire detections need a NASA FIRMS key configured for this server',
+        'Fire detections need a NASA FIRMS key, INPE or CONAE GOES enabled on this server',
       );
     const filter = normalizeFireFilter({
       minFrp: args.min_frp_mw,
@@ -141,13 +140,16 @@ export const getActiveFires = defineTool({
           areaContains(area, fire) &&
           firePassesFilter(
             {
-              frp: Number(fire.frp),
-              confidence: normalizeConfidence(fire.confidence),
+              frp: fire.frp,
+              confidence:
+                fire.confidence == null
+                  ? null
+                  : normalizeConfidence(fire.confidence),
             },
             filter,
           ),
       )
-      .sort((a, b) => (b.frp ?? 0) - (a.frp ?? 0));
+      .sort((a, b) => (b.frp ?? -1) - (a.frp ?? -1));
     const filterNotes = [
       ...(filter.minFrp > 0 ? [`≥ ${filter.minFrp} MW`] : []),
       ...(filter.confidence !== 'all'
@@ -167,9 +169,9 @@ export const getActiveFires = defineTool({
     // America only and carry no FRP or confidence.
     const southAmericaOnly = snapshot.coverage === 'south-america';
     const notes = [
-      ...(southAmericaOnly
+      ...(snapshot.coverage && snapshot.coverage !== 'world'
         ? [
-            'keyless source INPE Programa Queimadas covers South America only, without FRP or confidence',
+            `regional coverage (${snapshot.coverage}); absence of detections does not establish absence of fire`,
           ]
         : []),
       ...(stale ? ['data may be stale'] : []),
@@ -189,8 +191,13 @@ export const getActiveFires = defineTool({
         },
         stale,
         missing_sources: missing,
-        source: southAmericaOnly ? 'INPE Programa Queimadas' : 'NASA FIRMS',
-        coverage: southAmericaOnly ? 'south-america' : 'world',
+        source:
+          snapshot.sourceLabel ||
+          (southAmericaOnly ? 'INPE Programa Queimadas' : 'NASA FIRMS'),
+        coverage: snapshot.coverage || 'unspecified',
+        providers: snapshot.providers || [],
+        observation_policy:
+          'Provider observations retained; counts are not unique wildfire incidents.',
         fetched_at: isoTime(snapshot.fetchedAt),
         ...result,
         rows: result.rows.map((fire) => ({
@@ -198,7 +205,16 @@ export const getActiveFires = defineTool({
           lon: fire.lon,
           frp_mw: fire.frp ?? null,
           confidence: fire.confidence ?? null,
-          acquired: isoTime(acquiredMsUtc(fire.acqDate, fire.acqTime)),
+          acquired:
+            fire.provider === 'conae-goes'
+              ? isoTime(fire.acqMs)
+              : isoTime(acquiredMsUtc(fire.acqDate, fire.acqTime)),
+          source:
+            fire.provider === 'conae-goes'
+              ? 'CONAE GOES'
+              : fire.provider === 'inpe'
+                ? 'INPE Programa Queimadas'
+                : 'NASA FIRMS',
           satellite: fire.satellite ?? null,
           day_night: fire.daynight || null,
         })),

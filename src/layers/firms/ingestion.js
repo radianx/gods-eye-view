@@ -37,7 +37,17 @@ export function createIngestion({
         return;
       }
       layerState._keyRequired = false;
-      layerState._error = null;
+      layerState._sources = Array.isArray(payload.sources)
+        ? payload.sources
+        : [];
+      const failed = layerState._sources.filter((s) => s.ok === false);
+      // i18n-ignore: English status data; statusText translates it at paint.
+      layerState._error = failed.length
+        ? `PARTIAL · ${failed.map((s) => s.source).join(', ')} unavailable`
+        : null;
+      layerState._sourceLabel = payload.sourceLabel || config.source;
+      layerState._coverage = payload.coverage || null;
+      layerState._providers = payload.providers || [];
       layerState._stale = Boolean(payload?.stale);
       layerState._provider = payload?.provider === 'inpe' ? 'inpe' : 'firms';
       const previousSelection = layerState._selectedFire;
@@ -46,7 +56,7 @@ export function createIngestion({
       // Sorted once per payload; applyFilter only filters, so a slider drag
       // over 200k detections never re-sorts.
       layerState._allFiresByFrp = [...layerState._allFires].sort(
-        (a, b) => b.frp - a.frp,
+        (a, b) => (b.frp ?? -1) - (a.frp ?? -1),
       );
       applyFilter();
       // Data age, not response age: a stale proxy payload truthfully reads old.

@@ -31,7 +31,10 @@
     "dB",
     "hPa",
     "{source} HTTP {status}",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "de": [
     "1090 MHz",
@@ -202,7 +205,10 @@
     "ΔN",
     "Ⅱ PAUSE",
     "≥ {value} MW",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "es": [
     "1090 MHz",
@@ -334,7 +340,9 @@
     "≥ {value} MW",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW"
   ],
   "fr": [
     "1090 MHz",
@@ -519,7 +527,10 @@
     "ΔN",
     "Ⅱ PAUSE",
     "≥ {value} MW",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "it": [
     "1090 MHz",
@@ -694,7 +705,10 @@
     "≥ {value} MW",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "ja": [
     "1090 MHz",
@@ -744,7 +758,10 @@
     "ΔE",
     "ΔN",
     "≥ {value} MW",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "pt": [
     "1090 MHz",
@@ -877,7 +894,10 @@
     "{value} KM/S",
     "ΔN",
     "▲ {frp} MW",
-    "≥ {value} MW"
+    "≥ {value} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "ru": [
     "AIS: --",
@@ -895,7 +915,8 @@
     "S2 GhostMaps",
     "S2 · {name}",
     "VS",
-    "WHOT/BHOT"
+    "WHOT/BHOT",
+    "FRP {value}"
   ],
   "uk": [
     "AIS: --",
@@ -908,7 +929,10 @@
     "NVG",
     "REC",
     "S2 GhostMaps",
-    "WHOT/BHOT"
+    "WHOT/BHOT",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ],
   "zh-CN": [
     "1090 MHz",
@@ -966,7 +990,9 @@
     "≥ {value} MW",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -1024,6 +1050,9 @@
     "≥ {value} MW",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FRP {value}",
+    "{value} MW",
+    "▲ {frp}"
   ]
 }

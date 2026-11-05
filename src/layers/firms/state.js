@@ -56,6 +56,13 @@ export function createFirmsState({ services, config }) {
    * The detections that pass the intensity filter — the ONLY set rendering,
    * selection, cells, the top-fires query and the analyst records ever walk.
    */
+  layerState._sources = [];
+
+  layerState._sourceLabel = config.source;
+
+  layerState._coverage = null;
+
+  layerState._providers = [];
 
   layerState._fires = [];
 

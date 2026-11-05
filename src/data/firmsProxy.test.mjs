@@ -21,10 +21,7 @@ assert.notEqual(start, -1, 'FIRMS refresh function exists');
 const end = config.indexOf('\n  }', start);
 assert.notEqual(end, -1, 'FIRMS refresh function closes');
 const refreshSource = config.slice(start, end + 4);
-// Read the source list from production so these tests share one source of truth.
-const listed = config.match(/const SOURCES = \[([^\]]*)\];/);
-assert.ok(listed, 'FIRMS source list exists');
-const SOURCES = [...listed[1].matchAll(/'([A-Z0-9_]+)'/g)].map((m) => m[1]);
+const SOURCES = ['VIIRS_NOAA20_NRT', 'VIIRS_NOAA21_NRT', 'MODIS_NRT'];
 const NOW = Date.UTC(2026, 8, 11, 12);
 const recent = { acqDate: '2026-09-11', acqTime: '1100' };
 
@@ -312,7 +309,9 @@ test('every FIRMS upstream request goes through the IPv4 fallback', async () => 
 });
 
 test('FIRMS requests only the satellites NASA still delivers', () => {
-  // NASA stopped delivering Suomi NPP data on 2026-11-02 (#849): requesting it
-  // returns no rows and still spends a MAP_KEY transaction on every refresh.
-  assert.ok(!SOURCES.includes('VIIRS_SNPP_NRT'));
+  const listed = config.match(/const SOURCES = \[([^\]]*)\];/);
+  assert.ok(listed, 'FIRMS source list exists');
+  const production = [...listed[1].matchAll(/'([A-Z0-9_]+)'/g)].map((m) => m[1]);
+  assert.deepEqual(production, SOURCES);
+  assert.ok(!production.includes('VIIRS_SNPP_NRT'));
 });

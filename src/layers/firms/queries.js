@@ -1,4 +1,4 @@
-import { fireDetectionKey, fireEntityLabel } from '../../data/firmsLabels.js';
+import { fireDetectionKey } from '../../data/firmsLabels.js';
 import {
   FIRMS_CONFIDENCE_MODES,
   FRP_SLIDER_TICKS,
@@ -13,10 +13,6 @@ import { LOD_LEVELS, REFRESH_INTERVAL_MS } from './policy.js';
 
 /** Slider resolution: whole-percent positions along the log axis. */
 const SLIDER_STEPS = 1000;
-
-// i18n-ignore: provider name; sourceLabel() translates SOUTH AMERICA. No
-// trailing LIVE: the row's own status already reads "LIVE · updated …".
-const INPE_SOURCE = 'INPE Programa Queimadas · SOUTH AMERICA';
 
 export function createQueries({
   layerState,
@@ -53,7 +49,7 @@ export function createQueries({
       if (!fire) return null;
       return {
         id: fireDetectionKey(fire),
-        label: fireEntityLabel(fire.frp),
+        label: components.model.detectionLabel(fire),
         latitude: fire.lat,
         longitude: fire.lon,
         frp: fire.frp,
@@ -62,7 +58,12 @@ export function createQueries({
           : null,
         observedAt:
           Number.isFinite(fire.acqMs) && fire.acqMs > 0 ? fire.acqMs : null,
-        source: fire.sensor || fire.satellite || null,
+        source:
+          fire.provider === 'inpe'
+            ? 'INPE Programa Queimadas'
+            : fire.provider === 'conae-goes'
+              ? 'CONAE GOES'
+              : fire.sensor || fire.satellite || null,
       };
     },
 
@@ -225,11 +226,17 @@ export function createQueries({
         // A keyless server serves INPE's South American detections instead of
         // FIRMS (server/providers/inpeQueimadas.js); the row credits who
         // actually supplied them. sourceLabel() translates the known parts.
-        ...(layerState._provider === 'inpe' ? { source: INPE_SOURCE } : {}),
+        source:
+          layerState._provider === 'inpe'
+            ? 'INPE Programa Queimadas · SOUTH AMERICA'
+            : layerState._sourceLabel || source,
+        coverage: layerState._coverage,
+        providers: layerState._providers,
         // Shown (filtered) detections; `total` is the loaded payload.
         count: layerState._count,
         total: layerState._totalCount,
         cells: layerState._cellCount,
+        sources: layerState._sources,
         lastUpdate: layerState._lastUpdate,
         loading: layerState._loading,
         stale: layerState._stale,
@@ -253,15 +260,15 @@ export function createQueries({
      * @returns {{latitude: number, longitude: number, frp: number, label: string}|null}
      */
     getStrongestFire() {
-      const strongest = layerState._firesByFrp.length
-        ? layerState._firesByFrp[0]
-        : null;
+      const strongest = layerState._firesByFrp.find((fire) =>
+        Number.isFinite(fire.frp),
+      );
       if (!strongest) return null;
       return {
         latitude: strongest.lat,
         longitude: strongest.lon,
         frp: strongest.frp,
-        label: fireEntityLabel(strongest.frp),
+        label: components.model.detectionLabel(strongest),
       };
     },
 

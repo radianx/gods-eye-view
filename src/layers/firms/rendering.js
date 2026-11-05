@@ -39,14 +39,20 @@ export function createRendering({
    */
 
   function renderCurrentLod(force = false) {
-    if (
-      !layerState._dataSource ||
-      !layerState._fires.length ||
-      !layerState._viewer
-    ) {
-      // A filter that leaves nothing shown must not leave the old heat behind.
-      if (!layerState._fires.length) layerState._heatImagery?.setShow(false);
-      return false;
+    if (!layerState._dataSource || !layerState._viewer) return false;
+    // A restrictive filter or an empty refresh must remove the previous scene.
+    if (!layerState._fires.length) {
+      layerState._heatImagery?.setShow(false);
+      layerState._dataSource.entities.removeAll();
+      layerState._billboards?.removeAll();
+      layerState._pickIndexById.clear();
+      layerState._fireByCardId.clear();
+      layerState._cullPositions.length = 0;
+      layerState._labelCandidates = [];
+      layerState._cellCount = 0;
+      components.cards.rebuildAmbientLabels();
+      components.selection.refreshContextRegistrations([]);
+      return true;
     }
     const lodIndex = components.viewport.selectLodIndex(
       components.viewport.cameraHeight(),
@@ -146,9 +152,8 @@ export function createRendering({
           lonCell,
           count: 0,
           intensity: 0,
-          // Null until a detection with FRP joins: a cell of INPE detections
-          // has no maximum to show, not a maximum of 0 MW.
           maxFrp: null,
+          hasConae: false,
           night: 0,
           newestAcqMs: 0,
         };
@@ -156,6 +161,7 @@ export function createRendering({
         existing.intensity += intensity;
         if (Number.isFinite(fire.frp))
           existing.maxFrp = Math.max(existing.maxFrp ?? 0, fire.frp);
+        existing.hasConae ||= fire.provider === 'conae-goes';
         existing.newestAcqMs = Math.max(existing.newestAcqMs, fire.acqMs);
         if (fire.night) existing.night += 1;
         cells.set(key, existing);

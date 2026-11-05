@@ -149,9 +149,7 @@
   "{value} conf": "Konf. {value}",
   "{value} ago": "vor {value}",
   "sensor n/a": "Sensor k. A.",
-  "FIRE · {frp} MW": "BRAND · {frp} MW",
   "NIGHT": "NACHT",
-  "▲ {frp} MW": "▲ {frp} MW",
   "FIRE": "BRAND",
   "max {value} MW": "max. {value} MW",
   "new {value}": "zuletzt vor {value}",
@@ -3104,5 +3102,21 @@
   "The provider rejected the API key. Check it in Provider Settings.": "Der Anbieter hat den API-Schlüssel abgelehnt. Den Schlüssel in den Anbieter-Einstellungen prüfen.",
   "Too many chat requests. Try again in {seconds} s.": "Zu viele Chat-Anfragen. In {seconds} s erneut versuchen.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "Der Anbieter hat den Zugriff für diesen Schlüssel verweigert. Projekt, Region oder Berechtigungen des Schlüssels prüfen.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "Das Anbieterkonto hat kein Guthaben mehr. Die Abrechnung prüfen oder in den Einstellungen einen anderen KI-Anbieter wählen."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "Das Anbieterkonto hat kein Guthaben mehr. Die Abrechnung prüfen oder in den Einstellungen einen anderen KI-Anbieter wählen.",
+  "THERMAL DETECTION · {frp}": "THERMISCHE ERKENNUNG · {frp}",
+  "confidence n/a": "Konfidenz k. A.",
+  "Thermal detection · {frp}": "Thermische Erkennung · {frp}",
+  "PARTIAL · {sources} unavailable": "TEILWEISE · {sources} nicht verfügbar",
+  "FIRE · {frp}": "FEUER · {frp}",
+  "CONAE GOES · thermal anomaly, not a confirmed wildfire": "CONAE GOES · thermische Anomalie, kein bestätigter Waldbrand",
+  "confidence not published": "Konfidenz nicht veröffentlicht",
+  "THERMAL DETECTION": "THERMISCHE ERKENNUNG",
+  "FRP n/a": "FRP k. A.",
+  "{count} DETECTIONS": {
+    "one": "{count} ERKENNUNG",
+    "other": "{count} ERKENNUNGEN"
+  },
+  "{value} MW": "{value} MW",
+  "▲ {frp}": "▲ {frp}",
+  "FRP {value}": "FRP {value}"
 }
