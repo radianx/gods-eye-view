@@ -23,7 +23,10 @@ export function fireDetectionKey(fire) {
       .trim()
       .toUpperCase() ||
     'x';
-  return `firms:${lat}:${lon}:${acq}:${source}`;
+  const provider = ['conae-goes', 'inpe'].includes(fire?.provider)
+    ? fire.provider
+    : 'firms';
+  return `${provider}:${lat}:${lon}:${acq}:${source}`;
 }
 
 /**
@@ -77,5 +80,7 @@ export function satelliteShortName(satellite) {
   if (s === 'N20' || s === 'NOAA-20') return 'N20';
   if (s === 'N21' || s === 'NOAA-21') return 'N21';
   if (s === 'N' || s === 'NPP' || s === 'SUOMI NPP') return 'SNPP';
+  if (/^G\d{2}$/.test(s)) return 'GOES-' + s.slice(1);
+  if (/^GOES[- ]?\d{2}$/.test(s)) return s.replace(/^GOES[- ]?/, 'GOES-');
   return s ? s.slice(0, 6) : '';
 }

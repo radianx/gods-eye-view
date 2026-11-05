@@ -1,7 +1,6 @@
 import {
   FIRMS_OVERLAY_SOURCE_ID,
   fireDetectionKey,
-  fireEntityLabel,
 } from '../../data/firmsLabels.js';
 import * as Cesium from 'cesium';
 import { isPointerFree } from '../../data/inputOwnership.js';
@@ -82,7 +81,8 @@ export function createSelection({
     requestWorldFocus({
       kind: 'fire',
       id: fireDetectionKey(fire),
-      label: t('FIRE'),
+      label:
+        fire.provider === 'conae-goes' ? t('THERMAL DETECTION') : t('FIRE'),
       position: components.model.firePosition(fire),
     });
   }
@@ -192,10 +192,10 @@ export function createSelection({
       id: recordId,
       layerId: id,
       layerName: name,
-      source:
-        fire.provider === 'inpe' ? 'INPE Programa Queimadas' : 'NASA FIRMS',
+      source: components.model.fireSource(fire),
       dataSource: layerState._dataSource,
-      label: fireEntityLabel(fire.frp),
+      // i18n-ignore: English entity label; the voice card translates it (shownEntityLabel)
+      label: components.model.detectionLabel(fire),
       latitude: fire.lat,
       longitude: fire.lon,
       properties: {

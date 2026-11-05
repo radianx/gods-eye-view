@@ -690,9 +690,7 @@
   "{value} conf": "置信度 {value}",
   "{value} ago": "{value}前",
   "sensor n/a": "传感器 n/a",
-  "FIRE · {frp} MW": "火点 · {frp} MW",
   "NIGHT": "夜间",
-  "▲ {frp} MW": "▲ {frp} MW",
   "FIRE": "火点",
   "max {value} MW": "最大 {value} MW",
   "new {value}": "最新（{value}前）",
@@ -3029,5 +3027,20 @@
   "The provider rejected the API key. Check it in Provider Settings.": "服务商拒绝了 API 密钥。请在服务商设置中检查。",
   "Too many chat requests. Try again in {seconds} s.": "聊天请求过多。请在 {seconds} 秒后重试。",
   "The provider refused access for this key. Check the key's project, region or permissions.": "服务商拒绝了此密钥的访问请求。请检查该密钥所属的项目、区域或权限。",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "服务商账户余额不足。请检查账户的计费信息，或在设置中选择其他 AI 服务商。"
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "服务商账户余额不足。请检查账户的计费信息，或在设置中选择其他 AI 服务商。",
+  "confidence not published": "置信度未公布",
+  "THERMAL DETECTION · {frp}": "热异常探测 · {frp}",
+  "FIRE · {frp}": "火点 · {frp}",
+  "CONAE GOES · thermal anomaly, not a confirmed wildfire": "CONAE GOES · 热异常，非已确认的野火",
+  "confidence n/a": "置信度不可用",
+  "▲ {frp}": "▲ {frp}",
+  "{count} DETECTIONS": {
+    "other": "{count} 次探测"
+  },
+  "FRP n/a": "FRP 不可用",
+  "{value} MW": "{value} MW",
+  "FRP {value}": "FRP {value}",
+  "Thermal detection · {frp}": "热异常探测 · {frp}",
+  "THERMAL DETECTION": "热异常探测",
+  "PARTIAL · {sources} unavailable": "部分可用 · {sources} 不可用"
 }

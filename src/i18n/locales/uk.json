@@ -717,9 +717,7 @@
   "{value} conf": "достов.: {value}",
   "{value} ago": "{value} тому",
   "sensor n/a": "датчик н/д",
-  "FIRE · {frp} MW": "ПОЖЕЖА · {frp} МВт",
   "NIGHT": "НІЧ",
-  "▲ {frp} MW": "▲ {frp} МВт",
   "FIRE": "ПОЖЕЖА",
   "max {value} MW": "макс. {value} МВт",
   "new {value}": "останнє: {value} тому",
@@ -3254,5 +3252,23 @@
   "The provider rejected the API key. Check it in Provider Settings.": "Постачальник відхилив ключ API. Перевірте його в «Налаштуваннях постачальників».",
   "Too many chat requests. Try again in {seconds} s.": "Забагато запитів до чату. Спробуйте ще раз через {seconds} с.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "Постачальник відмовив цьому ключу в доступі. Перевірте проєкт, регіон або дозволи ключа.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "На вашому рахунку в постачальника закінчилися кошти. Перевірте оплату або виберіть іншого постачальника ШІ в налаштуваннях."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "На вашому рахунку в постачальника закінчилися кошти. Перевірте оплату або виберіть іншого постачальника ШІ в налаштуваннях.",
+  "THERMAL DETECTION · {frp}": "ТЕПЛОВЕ ВИЯВЛЕННЯ · {frp}",
+  "confidence n/a": "достовірність невідома",
+  "Thermal detection · {frp}": "Теплове виявлення · {frp}",
+  "PARTIAL · {sources} unavailable": "ЧАСТКОВО · {sources} недоступно",
+  "FIRE · {frp}": "ПОЖЕЖА · {frp}",
+  "CONAE GOES · thermal anomaly, not a confirmed wildfire": "CONAE GOES · теплова аномалія, а не підтверджена лісова пожежа",
+  "confidence not published": "достовірність не опублікована",
+  "THERMAL DETECTION": "ТЕПЛОВЕ ВИЯВЛЕННЯ",
+  "FRP n/a": "FRP невідомо",
+  "{count} DETECTIONS": {
+    "one": "{count} ВИЯВЛЕННЯ",
+    "few": "{count} ВИЯВЛЕННЯ",
+    "many": "{count} ВИЯВЛЕНЬ",
+    "other": "{count} ВИЯВЛЕННЯ"
+  },
+  "{value} MW": "{value} MW",
+  "▲ {frp}": "▲ {frp}",
+  "FRP {value}": "FRP {value}"
 }

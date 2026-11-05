@@ -34,18 +34,31 @@ export function adaptFirmsRecords(records) {
       index: fires.length,
       lat,
       lon,
-      // INPE publishes neither (src/data/inpeQueimadasCsv.js): unknown stays
-      // null, so a card never reads "0 MW" or "low" confidence for it.
-      frp: hasValue(record.frp) ? finiteNumber(record.frp) : null,
+      provider: ['conae-goes', 'inpe'].includes(record.provider)
+        ? record.provider
+        : 'firms',
+      frp:
+        record.provider === 'conae-goes' || record.provider === 'inpe'
+          ? optionalNumber(record.frp)
+          : hasValue(record.frp)
+            ? finiteNumber(record.frp)
+            : null,
       confidence: hasValue(record.confidence)
         ? normalizeConfidence(record.confidence)
         : null,
-      brightness: finiteNumber(record.brightness),
+      brightness:
+        record.provider === 'conae-goes' || record.provider === 'inpe'
+          ? optionalNumber(record.brightness)
+          : finiteNumber(record.brightness),
       night: record.daynight === 'N',
-      acqMs: parseAcquisitionMs(record.acqDate, record.acqTime, acqCache),
+      acqMs:
+        record.provider === 'conae-goes'
+          ? Number.isFinite(record.acqMs)
+            ? record.acqMs
+            : 0
+          : parseAcquisitionMs(record.acqDate, record.acqTime, acqCache),
       sensor: normalizeSensor(record.instrument),
       satellite: typeof record.satellite === 'string' ? record.satellite : '',
-      provider: record.provider === 'inpe' ? 'inpe' : 'firms',
       contextEntity: null,
       position: null,
     });
@@ -158,4 +171,10 @@ function hasCoordinateValue(value) {
     typeof value === 'number' ||
     (typeof value === 'string' && value.trim() !== '')
   );
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }

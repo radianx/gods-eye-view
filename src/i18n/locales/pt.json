@@ -707,9 +707,7 @@
   "{value} conf": "confiança {value}",
   "{value} ago": "há {value}",
   "sensor n/a": "sensor n/d",
-  "FIRE · {frp} MW": "INCÊNDIO · {frp} MW",
   "NIGHT": "NOITE",
-  "▲ {frp} MW": "▲ {frp} MW",
   "FIRE": "INCÊNDIO",
   "max {value} MW": "máx {value} MW",
   "new {value}": "mais recente há {value}",
@@ -3179,5 +3177,22 @@
   "The provider rejected the API key. Check it in Provider Settings.": "O provedor recusou a chave de API. Verifique-a em \"Configurações de provedores\".",
   "Too many chat requests. Try again in {seconds} s.": "Chat: limite de requisições atingido. Tente novamente em {seconds} s.",
   "The provider refused access for this key. Check the key's project, region or permissions.": "O provedor negou o acesso para esta chave. Verifique o projeto, a região ou as permissões da chave.",
-  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "A conta do provedor está sem crédito. Verifique o faturamento ou escolha outro provedor de IA em \"Configurações\"."
+  "The provider account is out of credit. Check its billing, or choose another AI Provider in Settings.": "A conta do provedor está sem crédito. Verifique o faturamento ou escolha outro provedor de IA em \"Configurações\".",
+  "THERMAL DETECTION · {frp}": "DETECÇÃO TÉRMICA · {frp}",
+  "confidence n/a": "confiança n/d",
+  "Thermal detection · {frp}": "Detecção térmica · {frp}",
+  "PARTIAL · {sources} unavailable": "PARCIAL · {sources} indisponível",
+  "FIRE · {frp}": "INCÊNDIO · {frp}",
+  "CONAE GOES · thermal anomaly, not a confirmed wildfire": "CONAE GOES · anomalia térmica, não um incêndio florestal confirmado",
+  "confidence not published": "confiança não publicada",
+  "THERMAL DETECTION": "DETECÇÃO TÉRMICA",
+  "FRP n/a": "FRP n/d",
+  "{count} DETECTIONS": {
+    "one": "{count} DETECÇÃO",
+    "other": "{count} DETECÇÕES",
+    "many": "{count} DETECÇÕES"
+  },
+  "{value} MW": "{value} MW",
+  "▲ {frp}": "▲ {frp}",
+  "FRP {value}": "FRP {value}"
 }

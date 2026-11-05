@@ -181,8 +181,9 @@ export function normalizeFireFilter(
  * @returns {boolean}
  */
 export function firePassesFilter(fire, filter = DEFAULT_FIRE_FILTER) {
-  const frp = Number.isFinite(fire?.frp) ? fire.frp : 0;
-  if (frp < (filter.minFrp || 0)) return false;
+  const minimum = filter.minFrp || 0;
+  if (minimum > 0 && (!Number.isFinite(fire?.frp) || fire.frp < minimum))
+    return false;
   const floor = CONFIDENCE_FLOOR[filter.confidence] ?? 0;
   if (floor <= 0) return true;
   const confidence = Number.isFinite(fire?.confidence) ? fire.confidence : 0;
