@@ -30,6 +30,8 @@
       "src/ui/views/panels/LocalePicker.vue",
       "src/ui/views/panels/SceneDialog.vue",
       "src/ui/views/panels/VoiceControl.vue",
+      "src/ui/views/panels/ChatPanel.vue",
+      "src/ui/views/panels/PanelLayoutButtons.vue",
       "src/ui/views/panels/VoiceCard.vue",
       "src/ui/views/panels/VoiceVisualizer.vue",
       "src/ui/localePicker.js",
@@ -149,7 +151,13 @@
       "src/ui/views/panels/GlobeCompass.vue",
       "src/ui/stores/recording.js",
       "src/ui/styleParameters.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js",
+      "src/data/militaryAwarenessEngine.js",
+      "src/ui/cockpitPresentation.js",
+      "src/data/installationNames.js",
+      "src/data/headingDegrees.js",
+      "src/i18n/marker.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -498,6 +506,15 @@
       "server/providers/common/rate-limit.js",
       "server/providers/common/request.js",
       "server/providers/common/source-root.js",
+      "server/providers/common/textChat.js",
+      "server/providers/common/textInstructions.js",
+      "server/providers/common/textTools.js",
+      "server/providers/openai/chat.js",
+      "server/providers/gemini/request.js",
+      "build/allowedHosts.js",
+      "src/tools/schema.js",
+      "src/sources/requestDeadline.js",
+      "src/sources/httpBody.js",
       "server/providers/openai.js",
       "server/providers/openai/codex-auth.js",
       "server/providers/openai/constants.js",
@@ -678,6 +695,8 @@
       "src/ui/rail/classToggle.js",
       "src/ui/rail/focusSafeChildren.js",
       "src/ui/layerPanel/RowText.vue",
+      "src/ui/layerPanel/RowSwitch.vue",
+      "src/ui/layerPanel/RowSlider.vue",
       "src/ui/railTimeline.js",
       "src/ui/clearLayersControl.js",
       "src/loadingFeedback.js",
@@ -715,7 +734,9 @@
       "src/ui/kit/UiButton.vue",
       "src/ui/kit/UiBadge.vue",
       "src/ui/rail/fieldValue.js",
-      "src/ui/kit/UiSlider.js"
+      "src/ui/kit/UiSlider.js",
+      "src/ui/kit/UiSegmented.vue",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue"]
   },
@@ -768,7 +789,9 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -800,7 +823,8 @@
       "src/ui/vueRuntime.js",
       "src/ui/stores/cctv.js",
       "src/ui/stores/status.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -857,6 +881,7 @@
       "src/ui/cockpitRollingValue.js",
       "src/ui/cockpitCamera.js",
       "src/ui/cockpitContext.js",
+      "src/layers/awareness/coverageLabel.js",
       "src/ui/cockpitController.js",
       "src/ui/cockpitDisplayPortal.js",
       "src/ui/displayPanelScroll.js",
@@ -883,7 +908,11 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/layerNames.js",
+      "src/ui/unitLabels.js",
+      "src/data/militaryAwarenessEngine.js",
+      "src/data/installationNames.js",
+      "src/i18n/marker.js"
     ],
     "external": ["cesium"]
   },
@@ -911,7 +940,8 @@
       "src/i18n/locales/zh-Hant.json",
       "src/ui/unitLabels.js",
       "src/ui/vueRuntime.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -941,6 +971,7 @@
       "src/data/detectionPolicy.js",
       "src/data/installationFeedback.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
@@ -985,6 +1016,7 @@
       "src/ui/cockpitRollingValue.js",
       "src/ui/cockpitCamera.js",
       "src/ui/cockpitContext.js",
+      "src/layers/awareness/coverageLabel.js",
       "src/ui/cockpitController.js",
       "src/ui/cockpitDisplayPortal.js",
       "src/ui/displayPanelScroll.js",
@@ -1015,6 +1047,8 @@
       "src/ui/rail/classToggle.js",
       "src/ui/rail/focusSafeChildren.js",
       "src/ui/layerPanel/RowText.vue",
+      "src/ui/layerPanel/RowSwitch.vue",
+      "src/ui/layerPanel/RowSlider.vue",
       "src/ui/railTimeline.js",
       "src/ui/layers.js",
       "src/ui/leftPanelRail.js",
@@ -1138,7 +1172,8 @@
       "src/ui/kit/UiBadge.vue",
       "src/ui/stores/globeActions.js",
       "src/ui/stores/recording.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/ui/kit/UiSegmented.vue"
     ],
     "external": ["cesium", "vue", "pinia", "vue-i18n"]
   },
@@ -1272,7 +1307,8 @@
       "src/ui/toast.js",
       "src/ui/stores/sceneInteractions.js",
       "src/ui/stores/dataPacks.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "vue", "pinia", "vue-i18n"]
   },
@@ -1307,6 +1343,7 @@
       "src/data/contactMatch.js",
       "src/data/iconOrientation.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/modelVisualAnchor.js",
@@ -1349,7 +1386,8 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium"]
   },
@@ -1369,6 +1407,7 @@
       "src/data/contactMatch.js",
       "src/data/iconOrientation.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/modelVisualAnchor.js",
@@ -1422,6 +1461,7 @@
       "src/data/contactMatch.js",
       "src/data/iconOrientation.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
@@ -1515,7 +1555,8 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/unitLabels.js",
-      "src/layers/recentImagery/display.js"
+      "src/layers/recentImagery/display.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium"]
   },
@@ -1523,6 +1564,8 @@
     "exports": ["./layers/firms"],
     "modules": [
       "src/data/firmsAdapt.js",
+      "src/data/firmsIntensity.js",
+      "src/data/firmsHeatRaster.js",
       "src/data/firmsLabels.js",
       "src/data/iconOrientation.js",
       "src/layers/firms/anchors.js",
@@ -1534,6 +1577,7 @@
       "src/layers/firms/policy.js",
       "src/layers/firms/queries.js",
       "src/layers/firms/rendering.js",
+      "src/layers/firms/heatImagery.js",
       "src/layers/firms/selection.js",
       "src/layers/firms/source.js",
       "src/layers/firms/state.js",
@@ -1590,7 +1634,8 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "satellite.js"]
   },
@@ -1630,7 +1675,9 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium"]
   },
@@ -1681,7 +1728,9 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/layers/installations/classLabel.js"
+      "src/layers/installations/classLabel.js",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "@mapbox/vector-tile", "pbf"]
   },
@@ -1707,6 +1756,7 @@
       "src/layers/awareness/model.js",
       "src/layers/awareness/navigation.js",
       "src/layers/awareness/panel.js",
+      "src/layers/awareness/coverageLabel.js",
       "src/layers/awareness/policy.js",
       "src/layers/awareness/presentation.js",
       "src/layers/awareness/queries.js",
@@ -1728,6 +1778,10 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
+      "src/data/installationFeedback.js",
+      "src/ui/layerNames.js",
       "src/ui/unitLabels.js"
     ],
     "external": ["cesium"]
@@ -1879,7 +1933,9 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1951,7 +2007,9 @@
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/layers/streetLevel/providers/mapillary/policy.js"
+      "src/layers/streetLevel/providers/mapillary/policy.js",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "pbf", "@mapbox/vector-tile", "mapillary-js"]
   },
@@ -1997,6 +2055,7 @@
     "modules": [
       "src/data/iconOrientation.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/radioCountry.js",
@@ -2148,6 +2207,14 @@
       "src/voice/realtimeBackend.js",
       "src/voice/cloudVoiceAuth.js",
       "src/voice/control.js",
+      "src/voice/chatControl.js",
+      "src/voice/geminiTextChat.js",
+      "src/voice/textChat.js",
+      "src/voice/textProtocol.js",
+      "src/voice/chatAttachments.js",
+      "src/voice/chatPreferences.js",
+      "src/voice/panelLayout.js",
+      "src/voice/voiceMiniPreview.js",
       "src/voice/layerSummary.js",
       "src/voice/voiceCost.js",
       "src/voice/commands.js",
@@ -2213,7 +2280,8 @@
       "src/ui/stores/voice.js",
       "src/ui/vueRuntime.js",
       "src/ui/stores/pointerReticle.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -2361,6 +2429,8 @@
       "src/data/fireAnchors.js",
       "src/data/firmsAdapt.js",
       "src/data/firmsHeatmap.js",
+      "src/data/firmsIntensity.js",
+      "src/data/firmsHeatRaster.js",
       "src/data/firmsLabels.js",
       "src/data/flights.js",
       "src/data/flowMatch.js",
@@ -2462,6 +2532,7 @@
       "src/layers/awareness/model.js",
       "src/layers/awareness/navigation.js",
       "src/layers/awareness/panel.js",
+      "src/layers/awareness/coverageLabel.js",
       "src/layers/awareness/policy.js",
       "src/layers/awareness/presentation.js",
       "src/layers/awareness/queries.js",
@@ -2522,6 +2593,7 @@
       "src/layers/firms/policy.js",
       "src/layers/firms/queries.js",
       "src/layers/firms/rendering.js",
+      "src/layers/firms/heatImagery.js",
       "src/layers/firms/selection.js",
       "src/layers/firms/source.js",
       "src/layers/firms/state.js",
@@ -2783,6 +2855,8 @@
       "src/ui/rail/classToggle.js",
       "src/ui/rail/focusSafeChildren.js",
       "src/ui/layerPanel/RowText.vue",
+      "src/ui/layerPanel/RowSwitch.vue",
+      "src/ui/layerPanel/RowSlider.vue",
       "src/ui/railTimeline.js",
       "src/ui/layers.js",
       "src/ui/leftPanelRail.js",
@@ -2831,6 +2905,14 @@
       "src/voice/panel/nativeActivity.js",
       "src/voice/panel/preferences.js",
       "src/voice/control.js",
+      "src/voice/chatControl.js",
+      "src/voice/geminiTextChat.js",
+      "src/voice/textChat.js",
+      "src/voice/textProtocol.js",
+      "src/voice/chatAttachments.js",
+      "src/voice/chatPreferences.js",
+      "src/voice/panelLayout.js",
+      "src/voice/voiceMiniPreview.js",
       "src/voice/gevActions.js",
       "src/agent/worldPacket.js",
       "src/voice/speech.js",
@@ -3244,6 +3326,8 @@
   "application-layer-construction": {
     "exports": ["./application/layers"],
     "modules": [
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
       "src/sources/adsbFields.js",
       "src/data/headingDegrees.js",
       "src/data/distanceFormat.js",
@@ -3314,6 +3398,8 @@
       "src/data/detectionDraw.js",
       "src/data/detectionPolicy.js",
       "src/data/firmsAdapt.js",
+      "src/data/firmsIntensity.js",
+      "src/data/firmsHeatRaster.js",
       "src/data/firmsLabels.js",
       "src/data/flowMatch.js",
       "src/data/focusDeemphasis.js",
@@ -3385,6 +3471,7 @@
       "src/layers/awareness/model.js",
       "src/layers/awareness/navigation.js",
       "src/layers/awareness/panel.js",
+      "src/layers/awareness/coverageLabel.js",
       "src/layers/awareness/policy.js",
       "src/layers/awareness/presentation.js",
       "src/layers/awareness/queries.js",
@@ -3445,6 +3532,7 @@
       "src/layers/firms/policy.js",
       "src/layers/firms/queries.js",
       "src/layers/firms/rendering.js",
+      "src/layers/firms/heatImagery.js",
       "src/layers/firms/selection.js",
       "src/layers/firms/source.js",
       "src/layers/firms/state.js",
@@ -3968,6 +4056,7 @@
       "src/i18n/marker.js",
       "src/data/installationFeedback.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
@@ -4039,7 +4128,9 @@
       "src/visualStylePolicy.js",
       "src/ui/rail/fieldValue.js",
       "src/ui/kit/UiSlider.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "vue", "pinia", "vue-i18n"]
   },
@@ -4077,7 +4168,9 @@
       "src/ui/vueRuntime.js",
       "src/ui/stores/panelChrome.js",
       "src/ui/rail/panelState.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -4219,6 +4312,15 @@
       "src/voice/sessionCommands.js",
       "src/voice/session.js",
       "src/voice/control.js",
+      "src/voice/chatControl.js",
+      "src/voice/cloudVoiceAuth.js",
+      "src/voice/geminiTextChat.js",
+      "src/voice/textChat.js",
+      "src/voice/textProtocol.js",
+      "src/voice/chatAttachments.js",
+      "src/voice/chatPreferences.js",
+      "src/voice/panelLayout.js",
+      "src/voice/voiceMiniPreview.js",
       "src/voice/voiceCard.js",
       "src/voice/voiceCardPresentation.js",
       "src/voice/resultDisplay.js",
@@ -4247,7 +4349,8 @@
       "src/ui/vueRuntime.js",
       "src/ui/stores/voice.js",
       "src/ui/stores/pointerReticle.js",
-      "src/ui/i18n.js"
+      "src/ui/i18n.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["vue", "pinia", "vue-i18n"]
   },
@@ -4510,7 +4613,9 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -4562,7 +4667,9 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/uk.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/ui/unitLabels.js",
+      "src/data/distanceFormat.js"
     ],
     "external": ["cesium", "pbf"]
   },
@@ -4676,6 +4783,7 @@
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/view/index.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/idSwitches.js",
@@ -4797,6 +4905,8 @@
       "src/tools/queries/brief.js",
       "src/tools/queries/maritime.js",
       "src/tools/queries/share.js",
+      "src/data/firmsIntensity.js",
+      "src/data/firmsAdapt.js",
       "src/data/idSwitches.js",
       "src/data/vesselTypes.js",
       "src/data/layerState.js",
@@ -4931,6 +5041,7 @@
     "modules": [
       "src/view/index.js",
       "src/data/idSwitches.js",
+      "src/data/firmsIntensity.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
       "src/visualStylePolicy.js"

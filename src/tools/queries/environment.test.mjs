@@ -934,7 +934,10 @@ test('regional briefs preserve DMH station attribution separately from forecast 
   assert.equal(result.data.station_observation_status, 'ready');
 });
 
-test('regional tool preserves both SMN and DMH provenance without mixing values or clocks', async () => {
+test('regional tool preserves SI values and SMN/DMH clocks under imperial display', async (t) => {
+  const { setUnitSystem } = await import('../../ui/unitLabels.js');
+  setUnitSystem('imperial');
+  t.after(() => setUnitSystem('metric'));
   const stationObservation = {
     source: 'DMH / DINAC',
     stationName: 'ENCARNACION',
@@ -949,6 +952,8 @@ test('regional tool preserves both SMN and DMH provenance without mixing values 
           source: 'smn',
           kind: 'station-observation',
           temperatureC: 18,
+          windKph: 16.09344,
+          precipitationMm: 25.4,
           reportedAt: '2026-10-17T09:00',
           observedAt: null,
           timeZone: null,
@@ -962,6 +967,9 @@ test('regional tool preserves both SMN and DMH provenance without mixing values 
   }).call('get_regional_brief', { location: { lat: -27.37, lon: -55.9 } });
   assert.equal(result.data.weather.source, 'smn');
   assert.equal(result.data.weather.temperature_c, 18);
+  assert.equal(result.data.weather.wind_kph, 16.09344);
+  assert.equal(result.data.weather.precipitation_mm, 25.4);
+  assert.equal(result.data.weather.station.distance_km, 6.7);
   assert.equal(result.data.weather.reported_at, '2026-10-17T09:00');
   assert.equal(result.data.weather.observed_at, null);
   assert.equal(result.data.weather.time_zone, null);

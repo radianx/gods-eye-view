@@ -39,7 +39,7 @@ test('Local Info renders station provenance and source wall time; page rotation 
   assert.equal(ui.brief.local.precipitation, '—');
   assert.match(
     ui.brief.local.weatherStation,
-    /SMN · POSADAS AERO · 6.7 KM FROM QUERY/,
+    /SMN · POSADAS AERO · 6.7\sKM FROM QUERY/,
   );
   assert.match(
     ui.brief.local.weatherTime,
@@ -148,7 +148,7 @@ for (const locale of [
       assert.doesNotMatch(ui.brief.local.weatherTime, /UTC/);
       assert.equal(ui.brief.local.observationHidden, false);
       assert.match(ui.brief.local.observation, /ENCARNACION/);
-      assert.match(ui.brief.local.observation, /0[.,]0°C/);
+      assert.match(ui.brief.local.observation, /0[.,]0\s°C/);
       assert.match(ui.brief.local.observation, /UTC/);
       assert.match(ui.brief.source, /SMN/);
       assert.match(ui.brief.source, /DMH \/ DINAC/);
@@ -198,3 +198,60 @@ for (const locale of [
     }
   });
 }
+
+test('unknown readings stay unknown and zero remains a real measurement in either system', async () => {
+  const { setUnitSystem } = await import('./unitLabels.js');
+  try {
+    for (const system of ['metric', 'imperial']) {
+      setUnitSystem(system);
+      for (const missing of [null, undefined, NaN, Infinity, '']) {
+        const ui = controller();
+        renderRegionalBrief.call(
+          ui,
+          {
+            weather: {
+              source: 'smn',
+              temperatureC: missing,
+              windKph: missing,
+              precipitationMm: missing,
+              station: { distanceKm: missing },
+            },
+            stationObservation: {
+              stationName: 'DMH',
+              distanceM: 2000,
+              observedAt: new Date().toISOString(),
+              temperatureC: missing,
+              windKph: missing,
+            },
+          },
+          {},
+        );
+        assert.equal(ui.brief.local.temperature, '—');
+        assert.equal(ui.brief.local.wind, '—');
+        assert.equal(ui.brief.local.precipitation, '—');
+        assert.match(ui.brief.local.weatherStation, /DISTANCE UNKNOWN/);
+        assert.doesNotMatch(
+          ui.brief.local.observation,
+          /°C|°F|WIND|NaN|Infinity/,
+        );
+      }
+      const ui = controller();
+      renderRegionalBrief.call(
+        ui,
+        { weather: { temperatureC: 0, windKph: 0, precipitationMm: 0 } },
+        {},
+      );
+      assert.equal(
+        ui.brief.local.temperature,
+        system === 'metric' ? '0°C' : '32°F',
+      );
+      assert.match(ui.brief.local.wind, /^0\s/);
+      assert.equal(
+        ui.brief.local.precipitation,
+        system === 'metric' ? '0.0' : '0.00',
+      );
+    }
+  } finally {
+    setUnitSystem('metric');
+  }
+});

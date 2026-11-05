@@ -1,6 +1,7 @@
 /** Regional briefing requests, pages and rotation for the Cockpit controller. */
 import { isRecentDmhObservation } from '../data/regionalModel.js';
 import { formatDate, formatNumber, t, msg } from '../i18n/index.js';
+import { convertQuantity, formatMeasure, getUnitSystem } from './unitLabels.js';
 import {
   COCKPIT_BRIEF_ROTATE_MS,
   COCKPIT_REGIONAL_REFRESH_MS,
@@ -8,6 +9,8 @@ import {
   formatCockpitBriefAge,
   formatCockpitCoordinate,
   formatCockpitWindDirection,
+  formatCockpitTemperature,
+  cockpitUnitCase,
 } from './cockpitPresentation.js';
 import {
   COCKPIT_BRIEF_PAGES,
@@ -313,7 +316,10 @@ function renderLocalWeather(weather, observation) {
   const values = [];
   if (Number.isFinite(observation?.temperatureC))
     values.push(
-      `${formatNumber(observation.temperatureC, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}°C`,
+      formatMeasure(observation.temperatureC, '°C', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
     );
   if (Number.isFinite(observation?.humidityPct))
     values.push(
@@ -323,33 +329,31 @@ function renderLocalWeather(weather, observation) {
     );
   if (Number.isFinite(observation?.windKph))
     values.push(
-      t('WIND {speed} KM/H {direction}', {
-        speed: formatNumber(Math.round(observation.windKph)),
+      t('WIND {speed} {direction}', {
+        speed: cockpitUnitCase(formatMeasure(observation.windKph, 'km/h')),
         direction: formatCockpitWindDirection(observation.windDirectionDeg),
       }),
     );
   local.observation = usable
     ? [
         t('DMH / DINAC · STATION OBSERVATION'),
-        t('{station} · {distance} KM FROM LOCATION', {
+        t('{station} · {distance} FROM LOCATION', {
           station: observation.stationName,
-          distance: formatNumber(observation.distanceM / 1000, {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          }),
+          distance: cockpitUnitCase(
+            formatMeasure(observation.distanceM / 1000, 'km', {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }),
+          ),
         }),
         values.join(' · '),
         `${formatDate(new Date(observation.observedAt), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC · ${formatCockpitBriefAge(observation.observedAt)}`,
       ].join('\n')
     : '';
 
-  local.temperature = Number.isFinite(weather?.temperatureC)
-    ? `${Math.round(weather.temperatureC)}°C`
-    : '—';
+  local.temperature = formatCockpitTemperature(weather?.temperatureC);
 
-  local.wind = Number.isFinite(weather?.windKph)
-    ? t('{value} KM/H', { value: Math.round(weather.windKph) })
-    : '—';
+  local.wind = cockpitUnitCase(formatMeasure(weather?.windKph, 'km/h'));
 
   local.windDirection = formatCockpitWindDirection(weather?.windDirectionDeg);
 
@@ -368,10 +372,10 @@ function renderLocalWeather(weather, observation) {
     : t('CLOUD UNKNOWN');
 
   local.precipitation = Number.isFinite(weather?.precipitationMm)
-    ? formatNumber(weather.precipitationMm, {
+    ? formatNumber(convertQuantity(weather.precipitationMm, 'mm').value, {
         useGrouping: false,
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
+        minimumFractionDigits: getUnitSystem() === 'imperial' ? 2 : 1,
+        maximumFractionDigits: getUnitSystem() === 'imperial' ? 2 : 1,
       })
     : '—';
 
@@ -386,11 +390,13 @@ function renderLocalWeather(weather, observation) {
   local.weatherStationHidden = !isSmn;
   const station = weather?.station;
   const distance = Number.isFinite(station?.distanceKm)
-    ? t('{distance} KM FROM QUERY', {
-        distance: formatNumber(station.distanceKm, {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }),
+    ? t('{distance} FROM QUERY', {
+        distance: cockpitUnitCase(
+          formatMeasure(station.distanceKm, 'km', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }),
+        ),
       })
     : t('DISTANCE UNKNOWN');
   local.weatherStation = isSmn

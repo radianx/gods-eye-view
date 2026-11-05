@@ -1655,7 +1655,7 @@ try {
       await new Promise(requestAnimationFrame);
       const station = document.getElementById('cockpit-local-weather-station');
       const observed = station && !station.hidden
-        && station.textContent.includes('POSADAS AERO · 6.7 KM FROM QUERY')
+        && station.textContent.replace(/\s/g, ' ').includes('POSADAS AERO · 6.7 KM FROM QUERY')
         && station.href === 'https://www.smn.gob.ar/descarga-de-datos'
         && text('cockpit-local-weather-time').includes('TIME ZONE UNSPECIFIED')
         && !text('cockpit-local-weather-time').includes('UTC')

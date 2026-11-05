@@ -1,8 +1,12 @@
 /**
  * The Cockpit Contact card's state as it first renders. It needs only the
- * i18n module, so the controller and the view can both read it.
+ * i18n and unit formatting modules, so the controller and the view can both
+ * read it.
  */
 import { t } from '../i18n/index.js';
+import { AWARENESS_RADIUS_M } from '../data/militaryAwarenessEngine.js';
+import { cockpitUnitCase } from './cockpitPresentation.js';
+import { formatDistance } from './unitLabels.js';
 
 /** Cohorts the card counts, in its order. */
 const COCKPIT_CONTEXT_COHORTS = Object.freeze([
@@ -21,11 +25,16 @@ const COCKPIT_CONTEXT_COHORTS = Object.freeze([
 export function createContextState() {
   return {
     state: null,
-    subject: t('CONTACTS · 250 KM'),
+    subject: t('CONTACTS · {distance}', {
+      distance: cockpitUnitCase(formatDistance(AWARENESS_RADIUS_M)),
+    }),
     canPrevious: true,
     canNext: true,
     cohorts: Object.fromEntries(
-      COCKPIT_CONTEXT_COHORTS.map((id) => [id, { count: '—', unknown: false }]),
+      COCKPIT_CONTEXT_COHORTS.map((id) => [
+        id,
+        { count: '—', unknown: false, source: '—' },
+      ]),
     ),
     nearest: { label: t('NO AVAILABLE EXAMPLE'), ariaLabel: null },
     distance: { text: '—', ariaLabel: null },

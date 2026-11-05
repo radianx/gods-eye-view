@@ -15,6 +15,7 @@ import {
   showBriefPage,
   updateLocalPosition,
 } from './cockpitBriefing.js';
+import { applicationI18n } from './i18n.js';
 import { setSignalCollapsed } from './cockpitLayout.js';
 import { useCockpitStore } from './stores/cockpit.js';
 import CockpitBriefing from './views/panels/CockpitBriefing.vue';
@@ -23,7 +24,7 @@ function fixture(t) {
   document.body.replaceChildren();
   const host = document.body.appendChild(document.createElement('div'));
   const pinia = createPinia();
-  const app = createApp(CockpitBriefing).use(pinia);
+  const app = createApp(CockpitBriefing).use(pinia).use(applicationI18n());
   app.mount(host);
   t.after(() => app.unmount());
   const store = useCockpitStore(pinia);
@@ -155,7 +156,7 @@ test('regional news and local conditions render what the region returned', async
   assert.match(links[0].querySelector('span').textContent, /^example\.com · /);
   assert.equal(text('#cockpit-local-place'), 'AUSTIN, TEXAS');
   assert.equal(text('#cockpit-local-temperature'), '22°C');
-  assert.equal(text('#cockpit-local-wind'), '12 KM/H');
+  assert.equal(text('#cockpit-local-wind'), '12\u00a0KM/H');
   assert.equal(text('#cockpit-local-condition'), 'RAIN');
   assert.equal(text('#cockpit-local-cloud'), 'CLOUD 40%');
   assert.equal(text('#cockpit-local-precipitation'), '1.3');
@@ -325,10 +326,13 @@ test('Vue keeps SMN and DMH values, clocks, escaping and clearing independent', 
   assert.equal($('#cockpit-local-weather-station img'), null);
   assert.match(text('#cockpit-local-weather-time'), /TIME ZONE UNSPECIFIED/);
   assert.doesNotMatch(text('#cockpit-local-weather-time'), /UTC/);
-  assert.match(text('#cockpit-local-observation'), /<Station & test>.*1.2 KM/s);
   assert.match(
     text('#cockpit-local-observation'),
-    /0.0°C · RH 0% · WIND 0 KM\/H/,
+    /<Station & test>.*1.2\sKM/s,
+  );
+  assert.match(
+    text('#cockpit-local-observation'),
+    /0.0\s°C · RH 0% · WIND 0\sKM\/H/,
   );
   assert.match(text('#cockpit-local-observation'), /UTC/);
   assert.equal($('#cockpit-local-observation').hidden, false);
@@ -356,4 +360,77 @@ test('Vue keeps SMN and DMH values, clocks, escaping and clearing independent', 
   assert.equal($('#cockpit-local-weather-time').hidden, true);
   assert.equal(text('#cockpit-local-observation'), '');
   assert.doesNotMatch(text('#cockpit-brief-source'), /SMN|DMH/);
+});
+
+test('unit switch immediately repaints SMN, DMH and precipitation from unchanged SI data', async (t) => {
+  const { $, text, owner } = fixture(t);
+  const { setUnitSystem } = await import('./unitLabels.js');
+  const { CockpitViewController } = await import('./cockpitController.js');
+  // Bind the same reactive preference and use the real controller subscription.
+  applicationI18n();
+  setUnitSystem('metric');
+  const event = { addEventListener: () => () => {} };
+  const controller = new CockpitViewController(
+    {
+      scene: { preUpdate: event, screenSpaceCameraController: {} },
+      trackedEntityChanged: event,
+    },
+    { services: owner.services, publish: { brief: owner.publishBrief } },
+  );
+  controller.scheduleContextLayout = () => {};
+  t.after(() => {
+    controller.dispose();
+    setUnitSystem('metric');
+  });
+  const payload = Object.freeze({
+    weather: Object.freeze({
+      source: 'smn',
+      temperatureC: 20,
+      windKph: 16.09344,
+      precipitationMm: 25.4,
+      station: Object.freeze({ name: 'POSADAS', distanceKm: 16.09344 }),
+    }),
+    stationObservation: Object.freeze({
+      stationName: 'ENCARNACION',
+      distanceM: 16093.44,
+      temperatureC: 0,
+      windKph: 16.09344,
+      humidityPct: 0,
+      observedAt: new Date().toISOString(),
+    }),
+  });
+  const original = JSON.stringify(payload);
+  controller.lastAircraftInfo = INFO;
+  controller.showBriefPage(2);
+  controller.renderRegionalBrief(payload, INFO);
+  const precipUnit = () =>
+    $('#cockpit-local-precipitation').nextElementSibling.textContent;
+  await nextTick();
+  assert.equal(text('#cockpit-local-temperature'), '20°C');
+  assert.match(text('#cockpit-local-observation'), /0.0\s°C/);
+  assert.equal(text('#cockpit-local-precipitation'), '25.4');
+  assert.equal(precipUnit(), 'MM');
+  for (let repeat = 0; repeat < 3; repeat++) {
+    setUnitSystem('imperial');
+    // Presenter publication is synchronous; Vue commits on the next tick.
+    assert.equal(controller.brief.local.temperature, '68°F');
+    await nextTick();
+    assert.equal(text('#cockpit-local-temperature'), '68°F');
+    assert.match(text('#cockpit-local-wind'), /^10\sMPH$/);
+    assert.match(text('#cockpit-local-weather-station'), /10.0\sMI FROM QUERY/);
+    assert.match(text('#cockpit-local-observation'), /10.0\sMI FROM LOCATION/);
+    assert.match(text('#cockpit-local-observation'), /32.0\s°F.*WIND 10\sMPH/s);
+    assert.equal(text('#cockpit-local-precipitation'), '1.00');
+    assert.equal(precipUnit(), 'IN');
+    assert.doesNotMatch(text('#cockpit-local-observation'), /°C|KM/);
+    setUnitSystem('metric');
+    await nextTick();
+    assert.equal(text('#cockpit-local-temperature'), '20°C');
+    assert.match(text('#cockpit-local-wind'), /^16\sKM\/H$/);
+    assert.match(text('#cockpit-local-weather-station'), /16.1\sKM FROM QUERY/);
+    assert.equal(text('#cockpit-local-precipitation'), '25.4');
+    assert.equal(precipUnit(), 'MM');
+  }
+  assert.equal(controller.regionalBrief, payload);
+  assert.equal(JSON.stringify(payload), original);
 });
